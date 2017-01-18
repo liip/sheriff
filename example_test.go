@@ -35,9 +35,10 @@ func (l UserList) Marshal(options *sheriff.Options) (interface{}, error) {
 }
 
 func MarshalUsers(version *version.Version, groups []string, users UserList) ([]byte, error) {
-	o := sheriff.NewOptions()
-	o.ApiVersion = version
-	o.Groups = groups
+	o := &sheriff.Options{
+		Groups:     groups,
+		ApiVersion: version,
+	}
 
 	data, err := users.Marshal(o)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,8 +50,9 @@ func TestMarshal_GroupsValidGroup(t *testing.T) {
 		SliceString:        []string{"test", "bla"},
 	}
 
-	o := NewOptions()
-	o.SetOnlyGroups([]string{"test"})
+	o := &Options{
+		Groups: []string{"test"},
+	}
 
 	actualMap, err := Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -80,8 +82,9 @@ func TestMarshal_GroupsValidGroupOmitEmpty(t *testing.T) {
 		SliceString:        []string{"test", "bla"},
 	}
 
-	o := NewOptions()
-	o.SetOnlyGroups([]string{"test"})
+	o := &Options{
+		Groups: []string{"test"},
+	}
 
 	actualMap, err := Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -110,8 +113,9 @@ func TestMarshal_GroupsInvalidGroup(t *testing.T) {
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
 	}
 
-	o := NewOptions()
-	o.SetOnlyGroups([]string{"foo"})
+	o := &Options{
+		Groups: []string{"foo"},
+	}
 
 	actualMap, err := Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -136,7 +140,7 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
 	}
 
-	o := NewOptions()
+	o := &Options{}
 
 	actualMap, err := Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -177,11 +181,12 @@ func TestMarshal_Versions(t *testing.T) {
 		Since21:        "Since21",
 	}
 
-	o := NewOptions()
-
-	// Api Version 1
-	err := o.SetApiVersion("1")
+	v1, err := version.NewVersion("1.0.0")
 	assert.NoError(t, err)
+
+	o := &Options{
+		ApiVersion: v1,
+	}
 
 	actualMap, err := Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -199,8 +204,12 @@ func TestMarshal_Versions(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 
 	// Api Version 2
-	err = o.SetApiVersion("2")
+	v2, err := version.NewVersion("2.0.0")
 	assert.NoError(t, err)
+
+	o = &Options{
+		ApiVersion: v2,
+	}
 
 	actualMap, err = Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -219,8 +228,12 @@ func TestMarshal_Versions(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 
 	// Api Version 2.1
-	err = o.SetApiVersion("2.1")
+	v21, err := version.NewVersion("2.1.0")
 	assert.NoError(t, err)
+
+	o = &Options{
+		ApiVersion: v21,
+	}
 
 	actualMap, err = Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -239,8 +252,12 @@ func TestMarshal_Versions(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 
 	// Api Version 3.0
-	err = o.SetApiVersion("3.0")
+	v3, err := version.NewVersion("3.0.0")
 	assert.NoError(t, err)
+
+	o = &Options{
+		ApiVersion: v3,
+	}
 
 	actualMap, err = Marshal(o, testModel)
 	assert.NoError(t, err)
@@ -293,8 +310,9 @@ func TestMarshal_Recursive(t *testing.T) {
 		GroupsData: SliceTestGroupsModel{testModel},
 	}
 
-	o := NewOptions()
-	o.SetOnlyGroups([]string{"test"})
+	o := &Options{
+		Groups: []string{"test"},
+	}
 
 	actualMap, err := Marshal(o, testRecursiveModel)
 	assert.NoError(t, err)

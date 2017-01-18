@@ -73,7 +73,7 @@ func BenchmarkModelsMarshaller_Marshal_NativeJSON(b *testing.B) {
 
 func BenchmarkModelsMarshaller_Marshal(b *testing.B) {
 	s := testData()
-	o := NewOptions()
+	o := &Options{}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -48,9 +48,10 @@ func (l UserList) Marshal(options *sheriff.Options) (interface{}, error) {
 }
 
 func MarshalUsers(version *version.Version, groups []string, users UserList) ([]byte, error) {
-    o := sheriff.NewOptions()
-    o.ApiVersion = version
-    o.Groups = groups
+    o := &sheriff.Options{
+       Groups:     groups,
+       ApiVersion: version,
+    }
 
     data, err := users.Marshal(o)
     if err != nil {
@@ -181,7 +182,7 @@ Want to make sheriff faster? I welcome your pull request 🚀!
 ```go
 func Marshal(options *Options, data interface{}) (interface{}, error)
 ```
-Marshal encodes the passed data into JSON.
+Marshal encodes the passed data into a map.
 
 #### type Marshaller
 
@@ -198,39 +199,18 @@ marshalling.
 
 ```go
 type Options struct {
-	Groups     []string
+	// Groups determine which fields are getting marshalled based on the groups tag.
+	// A field with multiple groups (comma-separated) will result in marshalling of that
+	// field if one of their groups is specified.
+	Groups []string
+	// ApiVersion sets the API version to use when marshalling.
+	// The tags `since` and `until` use the API version setting.
+	// Specifying the API version as "1.0.0" and having an until setting of "2"
+	// will result in the field being marshalled.
+	// Specifying a since setting of "2" with the same API version specified,
+	// will not marshal the field.
 	ApiVersion *version.Version
 }
 ```
 
-
-#### func  NewOptions
-
-```go
-func NewOptions() *Options
-```
-NewOptions creates new options with default settings.
-
-#### func (*Options) SetApiVersion
-
-```go
-func (m *Options) SetApiVersion(apiVersion string) error
-```
-ApiVersion sets the API version to use when marshalling.
-
-The tags `since` and `until` use the API version setting. Specifying the API
-version as "1" and having an until setting of "2" will result in the field being
-marshalled. Specifying a since setting of "2" with the same API version
-specified, will result in the field not being marshalled. Only when switching
-the API version to "2", the field with `since` will be marshalled.
-
-#### func (*Options) SetOnlyGroups
-
-```go
-func (m *Options) SetOnlyGroups(groups []string)
-```
-OnlyGroups sets groups to marshal.
-
-If a group has been set, only fields with that specific group will be
-marshalled. A field with multiple groups (comma-separated) will result in
-marshalling of that field if one of their groups is specified.
+Options determine which struct fields are being added to the output map.

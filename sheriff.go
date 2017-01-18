@@ -7,38 +7,19 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+// Options determine which struct fields are being added to the output map.
 type Options struct {
-	Groups     []string
+	// Groups determine which fields are getting marshalled based on the groups tag.
+	// A field with multiple groups (comma-separated) will result in marshalling of that
+	// field if one of their groups is specified.
+	Groups []string
+	// ApiVersion sets the API version to use when marshalling.
+	// The tags `since` and `until` use the API version setting.
+	// Specifying the API version as "1.0.0" and having an until setting of "2"
+	// will result in the field being marshalled.
+	// Specifying a since setting of "2" with the same API version specified,
+	// will not marshal the field.
 	ApiVersion *version.Version
-}
-
-// OnlyGroups sets groups to marshal.
-//
-// If a group has been set, only fields with that specific group will be marshalled.
-// A field with multiple groups (comma-separated) will result in marshalling of that field
-// if one of their groups is specified.
-func (m *Options) SetOnlyGroups(groups []string) {
-	m.Groups = groups
-}
-
-// ApiVersion sets the API version to use when marshalling.
-//
-// The tags `since` and `until` use the API version setting.
-// Specifying the API version as "1" and having an until setting
-// of "2" will result in the field being marshalled.
-// Specifying a since setting of "2" with the same API version specified,
-// will result in the field not being marshalled.
-// Only when switching the API version to "2", the field with `since` will be
-// marshalled.
-func (m *Options) SetApiVersion(apiVersion string) error {
-	v, err := version.NewVersion(apiVersion)
-	m.ApiVersion = v
-	return err
-}
-
-// NewOptions creates new options with default settings.
-func NewOptions() *Options {
-	return &Options{}
 }
 
 // Marshaller is the interface models have to implement in order to conform to marshalling.
@@ -46,7 +27,7 @@ type Marshaller interface {
 	Marshal(options *Options) (interface{}, error)
 }
 
-// Marshal encodes the passed data into JSON.
+// Marshal encodes the passed data into a map.
 func Marshal(options *Options, data interface{}) (interface{}, error) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
@@ -128,6 +109,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 	return dest, nil
 }
 
+// contains check if a given key is contained in a slice of strings.
 func contains(key string, list []string) bool {
 	for _, innerKey := range list {
 		if key == innerKey {
@@ -137,6 +119,8 @@ func contains(key string, list []string) bool {
 	return false
 }
 
+// listContains operates on two string slices and checks if one of the strings in `a`
+// is contained in `b`.
 func listContains(a []string, b []string) bool {
 	for _, key := range a {
 		if contains(key, b) {
