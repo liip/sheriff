@@ -39,7 +39,7 @@ func MarshalUsers(version *version.Version, groups []string, users UserList) ([]
 	o.ApiVersion = version
 	o.Groups = groups
 
-	data, err := sheriff.Marshal(o, users)
+	data, err := users.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
