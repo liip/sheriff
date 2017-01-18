@@ -158,6 +158,22 @@ func main() {
 }
 ```
 
+## Benchmarks
+
+There's a simple benchmark in `bench_test.go` which compares running sheriff -> JSON versus just marshalling into JSON. 
+
+```
+$ go test . -bench .
+BenchmarkModelsMarshaller_Marshal_NativeJSON-4   	  200000	     12821 ns/op
+BenchmarkModelsMarshaller_Marshal-4              	   20000	     64711 ns/op
+```
+
+This benchmark has been run using Go 1.7 on a MacBook Pro Late 2013 (2.8 GHz Intel Core 5, 16 GB 1600 MHz DDR3). 
+As you can see, sheriff is about 5 times slower than native "encoding/json" (bear in mind that this benchmark calls
+sheriff first and then `json.Marshal` too).
+
+Want to make sheriff faster? I welcome your pull request 🚀!
+
 ## Usage
 
 #### func  Marshal
