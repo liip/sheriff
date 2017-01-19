@@ -161,28 +161,40 @@ func main() {
 
 ## Benchmarks
 
-There's a simple benchmark in `bench_test.go` which compares running sheriff -> JSON versus just marshalling into JSON. 
+There's a simple benchmark in `bench_test.go` which compares running sheriff -> JSON versus just marshalling into JSON 
+and runs on every build. Just marshalling JSON itself takes usually between 3 and 5 times less nanoseconds per operation
+compared to running sheriff and JSON.
 
-```
-$ go test . -bench .
-BenchmarkModelsMarshaller_Marshal_NativeJSON-4   	  200000	     12821 ns/op
-BenchmarkModelsMarshaller_Marshal-4              	   20000	     64711 ns/op
-```
-
-This benchmark has been run using Go 1.7 on a MacBook Pro Late 2013 (2.8 GHz Intel Core 5, 16 GB 1600 MHz DDR3). 
-As you can see, sheriff is about 5 times slower than native "encoding/json" (bear in mind that this benchmark calls
-sheriff first and then `json.Marshal` too).
-
-Want to make sheriff faster? I welcome your pull request 🚀!
+Want to make sheriff faster? Please send us your pull request or open an issue discussing a possible improvement 🚀!
 
 ## Usage
 
 #### func  Marshal
 
 ```go
-func Marshal(options *Options, data interface{}) (interface{}, error)
+func Marshal(options *Options, data interface{}) (map[string]interface{}, error)
 ```
-Marshal encodes the passed data into a map.
+Marshal encodes the passed data into a map which can be used to pass to
+json.Marshal().
+
+The argument `data` needs to be a struct. If no struct is passed in, a
+MarshalInvalidTypeError is returned.
+
+#### type MarshalInvalidTypeError
+
+```go
+type MarshalInvalidTypeError struct {
+}
+```
+
+MarshalInvalidTypeError is an error returned to indicate the wrong type has been
+passed to Marshal.
+
+#### func (MarshalInvalidTypeError) Error
+
+```go
+func (e MarshalInvalidTypeError) Error() string
+```
 
 #### type Marshaller
 

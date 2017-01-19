@@ -9,15 +9,15 @@ import (
 )
 
 type TestGroupsModel struct {
-	DefaultMarshal            string      `json:"default_marshal"`
-	NeverMarshal              string      `json:"-"`
-	OnlyGroupTest             string      `json:"only_group_test" groups:"test"`
-	OnlyGroupTestNeverMarshal string      `json:"-" groups:"test"`
-	OnlyGroupTestOther        string      `json:"only_group_test_other" groups:"test-other"`
-	GroupTestAndOther         string      `json:"group_test_and_other" groups:"test,test-other"`
-	OmitEmpty                 string      `json:"omit_empty,omitempty"`
-	OmitEmptyGroupTest        string      `json:"omit_empty_group_test,omitempty" groups:"test"`
-	SliceString               SliceString `json:"slice_string" groups:"test"`
+	DefaultMarshal            string   `json:"default_marshal"`
+	NeverMarshal              string   `json:"-"`
+	OnlyGroupTest             string   `json:"only_group_test" groups:"test"`
+	OnlyGroupTestNeverMarshal string   `json:"-" groups:"test"`
+	OnlyGroupTestOther        string   `json:"only_group_test_other" groups:"test-other"`
+	GroupTestAndOther         string   `json:"group_test_and_other" groups:"test,test-other"`
+	OmitEmpty                 string   `json:"omit_empty,omitempty"`
+	OmitEmptyGroupTest        string   `json:"omit_empty_group_test,omitempty" groups:"test"`
+	SliceString               []string `json:"slice_string,omitempty" groups:"test"`
 }
 
 func (data *TestGroupsModel) Marshal(options *Options) (interface{}, error) {
@@ -155,7 +155,6 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		"group_test_and_other":  "GroupTestAndOther",
 		"omit_empty":            "OmitEmpty",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
-		"slice_string":          []string{},
 	})
 	assert.NoError(t, err)
 
@@ -334,4 +333,10 @@ func TestMarshal_Recursive(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
+}
+
+func TestMarshalInvalidTypeError_Error(t *testing.T) {
+	o := &Options{}
+	_, err := Marshal(o, "test")
+	assert.EqualError(t, err, "marshaller: Unable to marshal type string. Struct required.")
 }

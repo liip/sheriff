@@ -1,6 +1,7 @@
 package sheriff
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -22,13 +23,29 @@ type Options struct {
 	ApiVersion *version.Version
 }
 
+// MarshalInvalidTypeError is an error returned to indicate the wrong type has been
+// passed to Marshal.
+type MarshalInvalidTypeError struct {
+	// t reflects the type of the data
+	t reflect.Kind
+	// data contains the passed data itself
+	data interface{}
+}
+
+func (e MarshalInvalidTypeError) Error() string {
+	return fmt.Sprintf("marshaller: Unable to marshal type %s. Struct required.", e.t)
+}
+
 // Marshaller is the interface models have to implement in order to conform to marshalling.
 type Marshaller interface {
 	Marshal(options *Options) (interface{}, error)
 }
 
-// Marshal encodes the passed data into a map.
-func Marshal(options *Options, data interface{}) (interface{}, error) {
+// Marshal encodes the passed data into a map which can be used to pass to json.Marshal().
+//
+// The argument `data` needs to be a struct. If no struct is passed in,
+// a MarshalInvalidTypeError is returned.
+func Marshal(options *Options, data interface{}) (map[string]interface{}, error) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
 
@@ -45,10 +62,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 	}
 
 	if t.Kind() != reflect.Struct {
-		if marshaller, ok := data.(Marshaller); ok {
-			return marshaller.Marshal(options)
-		}
-		return data, nil
+		return nil, MarshalInvalidTypeError{t: t.Kind(), data: data}
 	}
 
 	for i := 0; i < t.NumField(); i++ {
