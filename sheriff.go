@@ -1,6 +1,7 @@
 package sheriff
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -123,6 +124,11 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 
 	if marshaller, ok := val.(Marshaller); ok {
 		return marshaller.Marshal(options)
+	}
+	// TODO(mweibel): This is a hack for struct types which conform to json.Marshaler (such as time.Time).
+	//                This makes sure those struct types aren't marshalled by sheriff if they appear as a field.
+	if _, ok := val.(json.Marshaler); ok {
+		return val, nil
 	}
 	k := v.Kind()
 

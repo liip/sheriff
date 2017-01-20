@@ -3,6 +3,7 @@ package sheriff
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
@@ -342,6 +343,35 @@ func TestMarshal_Recursive(t *testing.T) {
 		"is_marshaller": map[string]interface{}{
 			"should_marshal": "test",
 		},
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+type TimeHackTest struct {
+	ATime time.Time `json:"a_time" groups:"test"`
+}
+
+func TestMarshal_TimeHack(t *testing.T) {
+	hackCreationTime, err := time.Parse(time.RFC3339, "2017-01-20T18:11:00Z")
+	assert.NoError(t, err)
+
+	tht := TimeHackTest{
+		ATime: hackCreationTime,
+	}
+	o := &Options{
+		Groups: []string{"test"},
+	}
+
+	actualMap, err := Marshal(o, tht)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"a_time": "2017-01-20T18:11:00Z",
 	})
 	assert.NoError(t, err)
 
