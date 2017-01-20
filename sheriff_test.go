@@ -377,3 +377,29 @@ func TestMarshal_TimeHack(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type EmptyMapTest struct {
+	AMap map[string]string `json:"a_map" groups:"test"`
+}
+
+func TestMarshal_EmptyMap(t *testing.T) {
+	emp := EmptyMapTest{
+		AMap: make(map[string]string),
+	}
+	o := &Options{
+		Groups: []string{"test"},
+	}
+
+	actualMap, err := Marshal(o, emp)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"a_map": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}

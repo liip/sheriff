@@ -154,11 +154,15 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		return dest, nil
 	}
 	if k == reflect.Map {
-		if v.MapKeys()[0].Kind() != reflect.String {
-			return nil, MarshalInvalidTypeError{t: v.MapKeys()[0].Kind(), data: val}
+		mapKeys := v.MapKeys()
+		if len(mapKeys) == 0 {
+			return nil, nil
+		}
+		if mapKeys[0].Kind() != reflect.String {
+			return nil, MarshalInvalidTypeError{t: mapKeys[0].Kind(), data: val}
 		}
 		dest := make(map[string]interface{})
-		for _, key := range v.MapKeys() {
+		for _, key := range mapKeys {
 			d, err := marshalValue(options, v.MapIndex(key))
 			if err != nil {
 				return nil, err
