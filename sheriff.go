@@ -43,13 +43,12 @@ type Marshaller interface {
 
 // Marshal encodes the passed data into a map which can be used to pass to json.Marshal().
 //
-// The argument `data` needs to be a struct. If no struct is passed in,
-// a MarshalInvalidTypeError is returned.
-func Marshal(options *Options, data interface{}) (map[string]interface{}, error) {
+// If the passed argument `data` is a struct, the return value will be of type `map[string]interface{}`.
+// In all other cases we can't derive the type in a meaningful way and is therefore an `interface{}`.
+func Marshal(options *Options, data interface{}) (interface{}, error) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
 
-	dest := make(map[string]interface{})
 	checkGroups := len(options.Groups) > 0
 
 	if t.Kind() == reflect.Ptr {
@@ -62,8 +61,10 @@ func Marshal(options *Options, data interface{}) (map[string]interface{}, error)
 	}
 
 	if t.Kind() != reflect.Struct {
-		return nil, MarshalInvalidTypeError{t: t.Kind(), data: data}
+		return marshalValue(options, v)
 	}
+
+	dest := make(map[string]interface{})
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -107,20 +108,60 @@ func Marshal(options *Options, data interface{}) (map[string]interface{}, error)
 			}
 		}
 
-		actualValue := val.Interface()
-
-		if marshaller, ok := actualValue.(Marshaller); ok {
-			var err error
-			actualValue, err = marshaller.Marshal(options)
-			if err != nil {
-				return nil, err
-			}
+		v, err := marshalValue(options, val)
+		if err != nil {
+			return nil, err
 		}
-
-		dest[jsonTag] = actualValue
+		dest[jsonTag] = v
 	}
 
 	return dest, nil
+}
+
+func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
+	val := v.Interface()
+
+	if marshaller, ok := val.(Marshaller); ok {
+		return marshaller.Marshal(options)
+	}
+	k := v.Kind()
+
+	if k == reflect.Ptr {
+		v = v.Elem()
+		val = v.Interface()
+		k = v.Kind()
+	}
+
+	if k == reflect.Struct {
+		return Marshal(options, val)
+	}
+	if k == reflect.Slice {
+		l := v.Len()
+		dest := make([]interface{}, l)
+		for i := 0; i < l; i++ {
+			d, err := marshalValue(options, v.Index(i))
+			if err != nil {
+				return nil, err
+			}
+			dest[i] = d
+		}
+		return dest, nil
+	}
+	if k == reflect.Map {
+		if v.MapKeys()[0].Kind() != reflect.String {
+			return nil, MarshalInvalidTypeError{t: v.MapKeys()[0].Kind(), data: val}
+		}
+		dest := make(map[string]interface{})
+		for _, key := range v.MapKeys() {
+			d, err := marshalValue(options, v.MapIndex(key))
+			if err != nil {
+				return nil, err
+			}
+			dest[key.Interface().(string)] = d
+		}
+		return dest, nil
+	}
+	return val, nil
 }
 
 // contains check if a given key is contained in a slice of strings.

@@ -8,34 +8,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type AModel struct {
+	AllGroups bool `json:"something" groups:"test"`
+	TestGroup bool `json:"something_else" groups:"test-other"`
+}
+
 type TestGroupsModel struct {
-	DefaultMarshal            string   `json:"default_marshal"`
-	NeverMarshal              string   `json:"-"`
-	OnlyGroupTest             string   `json:"only_group_test" groups:"test"`
-	OnlyGroupTestNeverMarshal string   `json:"-" groups:"test"`
-	OnlyGroupTestOther        string   `json:"only_group_test_other" groups:"test-other"`
-	GroupTestAndOther         string   `json:"group_test_and_other" groups:"test,test-other"`
-	OmitEmpty                 string   `json:"omit_empty,omitempty"`
-	OmitEmptyGroupTest        string   `json:"omit_empty_group_test,omitempty" groups:"test"`
-	SliceString               []string `json:"slice_string,omitempty" groups:"test"`
-}
-
-func (data *TestGroupsModel) Marshal(options *Options) (interface{}, error) {
-	return Marshal(options, data)
-}
-
-type SliceString []string
-
-func (data SliceString) Marshal(options *Options) (interface{}, error) {
-	list := make([]interface{}, len(data))
-	for i, item := range data {
-		target, err := Marshal(options, item)
-		if err != nil {
-			return nil, err
-		}
-		list[i] = target
-	}
-	return list, nil
+	DefaultMarshal            string            `json:"default_marshal"`
+	NeverMarshal              string            `json:"-"`
+	OnlyGroupTest             string            `json:"only_group_test" groups:"test"`
+	OnlyGroupTestNeverMarshal string            `json:"-" groups:"test"`
+	OnlyGroupTestOther        string            `json:"only_group_test_other" groups:"test-other"`
+	GroupTestAndOther         string            `json:"group_test_and_other" groups:"test,test-other"`
+	OmitEmpty                 string            `json:"omit_empty,omitempty"`
+	OmitEmptyGroupTest        string            `json:"omit_empty_group_test,omitempty" groups:"test"`
+	SliceString               []string          `json:"slice_string,omitempty" groups:"test"`
+	MapStringStruct           map[string]AModel `json:"map_string_struct,omitempty" groups:"test,test-other"`
 }
 
 func TestMarshal_GroupsValidGroup(t *testing.T) {
@@ -48,6 +36,7 @@ func TestMarshal_GroupsValidGroup(t *testing.T) {
 		OmitEmpty:          "OmitEmpty",
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
 		SliceString:        []string{"test", "bla"},
+		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 
 	o := &Options{
@@ -64,7 +53,12 @@ func TestMarshal_GroupsValidGroup(t *testing.T) {
 		"only_group_test":       "OnlyGroupTest",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
 		"group_test_and_other":  "GroupTestAndOther",
-		"slice_string":          []string{"test", "bla"},
+		"map_string_struct": map[string]map[string]bool{
+			"firstModel": {
+				"something": true,
+			},
+		},
+		"slice_string": []string{"test", "bla"},
 	})
 	assert.NoError(t, err)
 
@@ -80,6 +74,7 @@ func TestMarshal_GroupsValidGroupOmitEmpty(t *testing.T) {
 		GroupTestAndOther:  "GroupTestAndOther",
 		OmitEmpty:          "OmitEmpty",
 		SliceString:        []string{"test", "bla"},
+		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 
 	o := &Options{
@@ -95,7 +90,12 @@ func TestMarshal_GroupsValidGroupOmitEmpty(t *testing.T) {
 	expected, err := json.Marshal(map[string]interface{}{
 		"only_group_test":      "OnlyGroupTest",
 		"group_test_and_other": "GroupTestAndOther",
-		"slice_string":         []string{"test", "bla"},
+		"map_string_struct": map[string]map[string]bool{
+			"firstModel": {
+				"something": true,
+			},
+		},
+		"slice_string": []string{"test", "bla"},
 	})
 	assert.NoError(t, err)
 
@@ -111,6 +111,7 @@ func TestMarshal_GroupsInvalidGroup(t *testing.T) {
 		GroupTestAndOther:  "GroupTestAndOther",
 		OmitEmpty:          "OmitEmpty",
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
+		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 
 	o := &Options{
@@ -138,6 +139,7 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		GroupTestAndOther:  "GroupTestAndOther",
 		OmitEmpty:          "OmitEmpty",
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
+		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 
 	o := &Options{}
@@ -153,6 +155,12 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		"only_group_test":       "OnlyGroupTest",
 		"only_group_test_other": "OnlyGroupTestOther",
 		"group_test_and_other":  "GroupTestAndOther",
+		"map_string_struct": map[string]map[string]bool{
+			"firstModel": {
+				"something":      true,
+				"something_else": true,
+			},
+		},
 		"omit_empty":            "OmitEmpty",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
 	})
@@ -274,23 +282,18 @@ func TestMarshal_Versions(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
-type TestRecursiveModel struct {
-	SomeData   string               `json:"some_data" groups:"test"`
-	GroupsData SliceTestGroupsModel `json:"groups_data,omitempty" groups:"test"`
+type IsMarshaller struct {
+	ShouldMarshal string `json:"should_marshal" groups:"test"`
 }
 
-type SliceTestGroupsModel []*TestGroupsModel
+func (i IsMarshaller) Marshal(options *Options) (interface{}, error) {
+	return Marshal(options, i)
+}
 
-func (data SliceTestGroupsModel) Marshal(options *Options) (interface{}, error) {
-	list := make([]interface{}, len(data))
-	for i, item := range data {
-		target, err := Marshal(options, item)
-		if err != nil {
-			return nil, err
-		}
-		list[i] = target
-	}
-	return list, nil
+type TestRecursiveModel struct {
+	SomeData     string             `json:"some_data" groups:"test"`
+	GroupsData   []*TestGroupsModel `json:"groups_data,omitempty" groups:"test"`
+	IsMarshaller IsMarshaller       `json:"is_marshaller" groups:"test"`
 }
 
 func TestMarshal_Recursive(t *testing.T) {
@@ -303,10 +306,12 @@ func TestMarshal_Recursive(t *testing.T) {
 		OmitEmpty:          "OmitEmpty",
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
 		SliceString:        []string{"test", "bla"},
+		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 	testRecursiveModel := &TestRecursiveModel{
-		SomeData:   "SomeData",
-		GroupsData: SliceTestGroupsModel{testModel},
+		SomeData:     "SomeData",
+		GroupsData:   []*TestGroupsModel{testModel},
+		IsMarshaller: IsMarshaller{"test"},
 	}
 
 	o := &Options{
@@ -326,17 +331,19 @@ func TestMarshal_Recursive(t *testing.T) {
 				"only_group_test":       "OnlyGroupTest",
 				"omit_empty_group_test": "OmitEmptyGroupTest",
 				"group_test_and_other":  "GroupTestAndOther",
-				"slice_string":          []string{"test", "bla"},
+				"map_string_struct": map[string]map[string]bool{
+					"firstModel": {
+						"something": true,
+					},
+				},
+				"slice_string": []string{"test", "bla"},
 			},
+		},
+		"is_marshaller": map[string]interface{}{
+			"should_marshal": "test",
 		},
 	})
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
-}
-
-func TestMarshalInvalidTypeError_Error(t *testing.T) {
-	o := &Options{}
-	_, err := Marshal(o, "test")
-	assert.EqualError(t, err, "marshaller: Unable to marshal type string. Struct required.")
 }

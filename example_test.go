@@ -16,23 +16,7 @@ type User struct {
 	Roles    []string `json:"roles" groups:"api" since:"2"`
 }
 
-func (u User) Marshal(options *sheriff.Options) (interface{}, error) {
-	return sheriff.Marshal(options, u)
-}
-
 type UserList []User
-
-func (l UserList) Marshal(options *sheriff.Options) (interface{}, error) {
-	list := make([]interface{}, len(l))
-	for i, item := range l {
-		target, err := item.Marshal(options)
-		if err != nil {
-			return nil, err
-		}
-		list[i] = target
-	}
-	return list, nil
-}
 
 func MarshalUsers(version *version.Version, groups []string, users UserList) ([]byte, error) {
 	o := &sheriff.Options{
@@ -40,7 +24,7 @@ func MarshalUsers(version *version.Version, groups []string, users UserList) ([]
 		ApiVersion: version,
 	}
 
-	data, err := users.Marshal(o)
+	data, err := sheriff.Marshal(o, users)
 	if err != nil {
 		return nil, err
 	}
