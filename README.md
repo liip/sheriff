@@ -1,5 +1,5 @@
 # sheriff
-[![GoDoc](https://godoc.org/github.com/liip/sheriff?status.svg)](https://godoc.org/github.com/liip/sheriff)
+[![GoDoc](https://godoc.org/github.com/liip/sheriff?status.svg)](https://godoc.org/github.com/liip/sheriff) [![Build Status](https://travis-ci.org/liip/sheriff.svg?branch=master)](https://travis-ci.org/liip/sheriff) [![Coverage Status](https://coveralls.io/repos/github/liip/sheriff/badge.svg?branch=master)](https://coveralls.io/github/liip/sheriff?branch=master)
 
 ```
 go get github.com/liip/sheriff
