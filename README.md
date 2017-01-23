@@ -1,4 +1,5 @@
 # sheriff
+[![GoDoc](https://godoc.org/github.com/liip/sheriff?status.svg)](https://godoc.org/github.com/liip/sheriff)
 
 ```
 go get github.com/liip/sheriff
@@ -153,64 +154,3 @@ and runs on every build. Just marshalling JSON itself takes usually between 3 an
 compared to running sheriff and JSON.
 
 Want to make sheriff faster? Please send us your pull request or open an issue discussing a possible improvement 🚀!
-
-## Usage
-
-#### func  Marshal
-
-```go
-func Marshal(options *Options, data interface{}) (interface{}, error)
-```
-Marshal encodes the passed data into a map which can be used to pass to
-json.Marshal().
-
-If the passed argument `data` is a struct, the return value will be of type
-`map[string]interface{}`. In all other cases we can't derive the type in a
-meaningful way and is therefore an `interface{}`.
-
-#### type MarshalInvalidTypeError
-
-```go
-type MarshalInvalidTypeError struct {
-}
-```
-
-MarshalInvalidTypeError is an error returned to indicate the wrong type has been
-passed to Marshal.
-
-#### func (MarshalInvalidTypeError) Error
-
-```go
-func (e MarshalInvalidTypeError) Error() string
-```
-
-#### type Marshaller
-
-```go
-type Marshaller interface {
-	Marshal(options *Options) (interface{}, error)
-}
-```
-
-Marshaller is the interface models have to implement in order to conform to
-marshalling.
-
-#### type Options
-
-```go
-type Options struct {
-	// Groups determine which fields are getting marshalled based on the groups tag.
-	// A field with multiple groups (comma-separated) will result in marshalling of that
-	// field if one of their groups is specified.
-	Groups []string
-	// ApiVersion sets the API version to use when marshalling.
-	// The tags `since` and `until` use the API version setting.
-	// Specifying the API version as "1.0.0" and having an until setting of "2"
-	// will result in the field being marshalled.
-	// Specifying a since setting of "2" with the same API version specified,
-	// will not marshal the field.
-	ApiVersion *version.Version
-}
-```
-
-Options determine which struct fields are being added to the output map.

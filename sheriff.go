@@ -119,6 +119,9 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 	return dest, nil
 }
 
+// marshalValue is being used for getting the actual value of a field.
+//
+// There is support for types implementing the Marshaller interface, arbitrary structs, slices, maps and base types.
 func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 	val := v.Interface()
 
