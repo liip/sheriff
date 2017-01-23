@@ -1,4 +1,4 @@
-package: github.com/mweibel/sheriff
+package: github.com/liip/sheriff
 import:
 - package: github.com/hashicorp/go-version
 testImport:

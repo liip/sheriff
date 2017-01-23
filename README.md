@@ -1,6 +1,8 @@
 # sheriff
---
-    import "github.com/mweibel/sheriff"
+
+```
+go get github.com/liip/sheriff
+```
 
 Package sheriff transforms structs into a map based on specific tags on the
 struct fields. A typical use is an API which marshals structs into JSON and
@@ -19,7 +21,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/go-version"
-	"github.com/mweibel/sheriff"
+	"github.com/liip/sheriff"
 )
 
 type User struct {

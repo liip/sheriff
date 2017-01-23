@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/go-version"
-	"github.com/mweibel/sheriff"
+	"github.com/liip/sheriff"
 )
 
 type User struct {
