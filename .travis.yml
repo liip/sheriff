@@ -16,6 +16,6 @@ script:
   - go tool vet $FILES
   - goimports -d $FILES
   # testing
-  - go test . -v -race -covermode=count -coverprofile=cover.out
+  - go test -v -race -bench . -covermode=count -coverprofile=cover.out
   # coveralls.io
   - goveralls -coverprofile=cover.out -service=travis-ci
