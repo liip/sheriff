@@ -154,3 +154,8 @@ and runs on every build. Just marshalling JSON itself takes usually between 3 an
 compared to running sheriff and JSON.
 
 Want to make sheriff faster? Please send us your pull request or open an issue discussing a possible improvement 🚀!
+
+## Acknowledgements
+
+- This idea and code has been created partially during a [Liip](https://liip.ch) hackday.
+- Thanks to [@basgys](https://github.com/basgys) for reviews & improvements.
