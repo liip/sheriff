@@ -12,7 +12,53 @@ with API version and group tags. By invoking sheriff with specific options,
 those tags determine whether a field will be added to the output map or not. It
 can then be marshalled using "encoding/json".
 
+## Implemented tags
+
+### Groups
+Groups can be used for limiting the output based on freely defined parameters. For example: restrict marshalling the email
+address of a user to the user itself by just adding the group `personal` if the user fetches his profile.
+Multiple groups can be separated by comma.
+
 Example:
+
+```go
+type GroupsExample struct {
+    Username      string `json:"username" groups:"api"`
+    Email         string `json:"email" groups:"personal"`
+    SomethingElse string `json:"something_else" groups:"api,personal"`
+}
+```
+ 
+### Since
+Since specifies the version since that field is available. It's inclusive and SemVer compatible using
+[github.com/hashicorp/go-version](https://github.com/hashicorp/go-version).
+If you specify version `2` in a tag, this version will be output in case you specify version `>=2.0.0` as the API version.
+
+Example:
+
+```go
+type SinceExample struct {
+    Username string `json:"username" since:"2.1.0"`
+    Email    string `json:"email" since:"2"`
+}
+```
+
+### Until
+Until specifies the version until that field is available. It's the opposite of since, inclusive and SemVer
+compatible using [github.com/hashicorp/go-version](https://github.com/hashicorp/go-version).
+If you specify version `2` in a tag, this version will be output in case you specify version `<=2.0.0` as the API version.
+
+Example:
+
+```go
+type UntilExample struct {
+    Username string `json:"username" until:"2.1.0"`
+    Email    string `json:"email" until:"2"`
+}
+```
+
+## Example
+
 ```go
 package main
 
