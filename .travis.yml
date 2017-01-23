@@ -1,0 +1,21 @@
+language: go
+go:
+  - 1.6
+  - 1.7
+
+install:
+  - curl https://glide.sh/get | sh 2>/dev/null
+  - glide install
+  - go get -u golang.org/x/tools/cmd/goimports
+  - go get github.com/mattn/goveralls
+
+script:
+  - FILES=`find . -iname '*.go' -type f -not -path "./vendor/*"`
+  # linting
+  - gofmt -d $FILES
+  - go tool vet $FILES
+  - goimports -d $FILES
+  # testing
+  - go test . -v -race -covermode=count -coverprofile=cover.out
+  # coveralls.io
+  - goveralls -coverprofile=cover.out -service=travis-ci
