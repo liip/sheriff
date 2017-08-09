@@ -6,9 +6,12 @@ go get github.com/liip/sheriff
 ```
 
 Package sheriff marshals structs conditionally based on tags on the fields. 
+
 A typical use is an API which marshals structs into JSON and
 maintains different API versions. Using sheriff, struct fields can be annotated
-with API version and group tags. By invoking sheriff with specific options,
+with API version and group tags. 
+
+By invoking sheriff with specific options,
 those tags determine whether a field will be added to the output map or not. It
 can then be marshalled using "encoding/json".
 
