@@ -3,6 +3,7 @@ go:
   - 1.6
   - 1.7
   - 1.8
+  - 1.9
 
 before_install:
   - go get -u golang.org/x/tools/cmd/goimports
@@ -15,6 +16,6 @@ script:
   - go tool vet $FILES
   - goimports -d $FILES
   # testing
-  - go test -v -race -bench . -covermode=count -coverprofile=cover.out
+  - go test -v -race -bench . -covermode=atomic -coverprofile=cover.out
   # coveralls.io
   - goveralls -coverprofile=cover.out -service=travis-ci
