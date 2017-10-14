@@ -80,32 +80,43 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			continue
 		}
 
-		if checkGroups {
-			groups := strings.Split(field.Tag.Get("groups"), ",")
-
-			shouldShow := listContains(groups, options.Groups)
-			if !shouldShow || len(groups) == 0 {
-				continue
-			}
+		// if there is an anonymous field which is a struct
+		// we want the childs exposed at the toplevel to be
+		// consistent with the embedded json marshaller
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
 		}
 
-		if since := field.Tag.Get("since"); since != "" {
-			sinceVersion, err := version.NewVersion(since)
-			if err != nil {
-				return nil, err
-			}
-			if options.ApiVersion.LessThan(sinceVersion) {
-				continue
-			}
-		}
+		// we can skip the group checkif if the field is a composition field
+		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
+		if !isEmbeddedField {
+			if checkGroups {
+				groups := strings.Split(field.Tag.Get("groups"), ",")
 
-		if until := field.Tag.Get("until"); until != "" {
-			untilVersion, err := version.NewVersion(until)
-			if err != nil {
-				return nil, err
+				shouldShow := listContains(groups, options.Groups)
+				if !shouldShow || len(groups) == 0 {
+					continue
+				}
 			}
-			if options.ApiVersion.GreaterThan(untilVersion) {
-				continue
+
+			if since := field.Tag.Get("since"); since != "" {
+				sinceVersion, err := version.NewVersion(since)
+				if err != nil {
+					return nil, err
+				}
+				if options.ApiVersion.LessThan(sinceVersion) {
+					continue
+				}
+			}
+
+			if until := field.Tag.Get("until"); until != "" {
+				untilVersion, err := version.NewVersion(until)
+				if err != nil {
+					return nil, err
+				}
+				if options.ApiVersion.GreaterThan(untilVersion) {
+					continue
+				}
 			}
 		}
 
@@ -113,7 +124,17 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		dest[jsonTag] = v
+
+		// when a composition field we want to bring the child
+		// nodes to the top
+		nestedVal, ok := v.(map[string]interface{})
+		if isEmbeddedField && ok {
+			for key, value := range nestedVal {
+				dest[key] = value
+			}
+		} else {
+			dest[jsonTag] = v
+		}
 	}
 
 	return dest, nil

@@ -403,3 +403,64 @@ func TestMarshal_EmptyMap(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type TestMarshal_Embedded struct {
+	Foo string `json:"foo" groups:"test"`
+}
+
+type TestMarshal_EmbeddedParent struct {
+	*TestMarshal_Embedded
+	Bar string `json:"bar" groups:"test"`
+}
+
+func TestMarshal_EmbeddedField(t *testing.T) {
+	v := TestMarshal_EmbeddedParent{
+		&TestMarshal_Embedded{"Hello"},
+		"World",
+	}
+	o := &Options{Groups: []string{"test"}}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"bar": "World",
+		"foo": "Hello",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+type TestMarshal_EmbeddedEmpty struct {
+	Foo string
+}
+
+type TestMarshal_EmbeddedParentEmpty struct {
+	*TestMarshal_EmbeddedEmpty
+	Bar string `json:"bar" groups:"test"`
+}
+
+func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
+	v := TestMarshal_EmbeddedParentEmpty{
+		&TestMarshal_EmbeddedEmpty{"Hello"},
+		"World",
+	}
+	o := &Options{Groups: []string{"test"}}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"bar": "World",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
