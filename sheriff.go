@@ -88,7 +88,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		}
 
 		// we can skip the group checkif if the field is a composition field
-		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
+		isEmbeddedField := field.Anonymous && jsonTag == "" && val.Kind() == reflect.Struct
 		if !isEmbeddedField {
 			if checkGroups {
 				groups := strings.Split(field.Tag.Get("groups"), ",")
