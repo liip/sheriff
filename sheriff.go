@@ -87,53 +87,55 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			val = val.Elem()
 		}
 
-		// we can skip the group checkif if the field is a composition field
-		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
-		if !isEmbeddedField {
-			if checkGroups {
-				groups := strings.Split(field.Tag.Get("groups"), ",")
+		if val.CanInterface() {
+			// we can skip the group checkif if the field is a composition field
+			isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
+			if !isEmbeddedField {
+				if checkGroups {
+					groups := strings.Split(field.Tag.Get("groups"), ",")
 
-				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || len(groups) == 0 {
-					continue
+					shouldShow := listContains(groups, options.Groups)
+					if !shouldShow || len(groups) == 0 {
+						continue
+					}
+				}
+
+				if since := field.Tag.Get("since"); since != "" {
+					sinceVersion, err := version.NewVersion(since)
+					if err != nil {
+						return nil, err
+					}
+					if options.ApiVersion.LessThan(sinceVersion) {
+						continue
+					}
+				}
+
+				if until := field.Tag.Get("until"); until != "" {
+					untilVersion, err := version.NewVersion(until)
+					if err != nil {
+						return nil, err
+					}
+					if options.ApiVersion.GreaterThan(untilVersion) {
+						continue
+					}
 				}
 			}
 
-			if since := field.Tag.Get("since"); since != "" {
-				sinceVersion, err := version.NewVersion(since)
-				if err != nil {
-					return nil, err
-				}
-				if options.ApiVersion.LessThan(sinceVersion) {
-					continue
-				}
+			v, err := marshalValue(options, val)
+			if err != nil {
+				return nil, err
 			}
 
-			if until := field.Tag.Get("until"); until != "" {
-				untilVersion, err := version.NewVersion(until)
-				if err != nil {
-					return nil, err
+			// when a composition field we want to bring the child
+			// nodes to the top
+			nestedVal, ok := v.(map[string]interface{})
+			if isEmbeddedField && ok {
+				for key, value := range nestedVal {
+					dest[key] = value
 				}
-				if options.ApiVersion.GreaterThan(untilVersion) {
-					continue
-				}
+			} else {
+				dest[jsonTag] = v
 			}
-		}
-
-		v, err := marshalValue(options, val)
-		if err != nil {
-			return nil, err
-		}
-
-		// when a composition field we want to bring the child
-		// nodes to the top
-		nestedVal, ok := v.(map[string]interface{})
-		if isEmbeddedField && ok {
-			for key, value := range nestedVal {
-				dest[key] = value
-			}
-		} else {
-			dest[jsonTag] = v
 		}
 	}
 
