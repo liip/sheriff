@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/hashicorp/go-version"
 )
@@ -87,55 +88,53 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			val = val.Elem()
 		}
 
-		if val.IsValid() && val.CanInterface() {
-			// we can skip the group checkif if the field is a composition field
-			isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
-			if !isEmbeddedField {
-				if checkGroups {
-					groups := strings.Split(field.Tag.Get("groups"), ",")
+		// we can skip the group checkif if the field is a composition field
+		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
+		if !isEmbeddedField {
+			if checkGroups {
+				groups := strings.Split(field.Tag.Get("groups"), ",")
 
-					shouldShow := listContains(groups, options.Groups)
-					if !shouldShow || len(groups) == 0 {
-						continue
-					}
-				}
-
-				if since := field.Tag.Get("since"); since != "" {
-					sinceVersion, err := version.NewVersion(since)
-					if err != nil {
-						return nil, err
-					}
-					if options.ApiVersion.LessThan(sinceVersion) {
-						continue
-					}
-				}
-
-				if until := field.Tag.Get("until"); until != "" {
-					untilVersion, err := version.NewVersion(until)
-					if err != nil {
-						return nil, err
-					}
-					if options.ApiVersion.GreaterThan(untilVersion) {
-						continue
-					}
+				shouldShow := listContains(groups, options.Groups)
+				if !shouldShow || len(groups) == 0 {
+					continue
 				}
 			}
 
-			v, err := marshalValue(options, val)
-			if err != nil {
-				return nil, err
+			if since := field.Tag.Get("since"); since != "" {
+				sinceVersion, err := version.NewVersion(since)
+				if err != nil {
+					return nil, err
+				}
+				if options.ApiVersion.LessThan(sinceVersion) {
+					continue
+				}
 			}
 
-			// when a composition field we want to bring the child
-			// nodes to the top
-			nestedVal, ok := v.(map[string]interface{})
-			if isEmbeddedField && ok {
-				for key, value := range nestedVal {
-					dest[key] = value
+			if until := field.Tag.Get("until"); until != "" {
+				untilVersion, err := version.NewVersion(until)
+				if err != nil {
+					return nil, err
 				}
-			} else {
-				dest[jsonTag] = v
+				if options.ApiVersion.GreaterThan(untilVersion) {
+					continue
+				}
 			}
+		}
+
+		v, err := marshalValue(options, val)
+		if err != nil {
+			return nil, err
+		}
+
+		// when a composition field we want to bring the child
+		// nodes to the top
+		nestedVal, ok := v.(map[string]interface{})
+		if isEmbeddedField && ok {
+			for key, value := range nestedVal {
+				dest[key] = value
+			}
+		} else {
+			dest[jsonTag] = v
 		}
 	}
 
@@ -146,7 +145,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 //
 // There is support for types implementing the Marshaller interface, arbitrary structs, slices, maps and base types.
 func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
-	val := v.Interface()
+	val := interfaceOf(v)
 
 	if marshaller, ok := val.(Marshaller); ok {
 		return marshaller.Marshal(options)
@@ -219,4 +218,79 @@ func listContains(a []string, b []string) bool {
 		}
 	}
 	return false
+}
+
+// interfaceOf returns v.Interface() even if v.CanInterface() == false.
+// This enables us to call fmt.Printf on a value even if it's derived
+// from inside an unexported field.
+// See https://code.google.com/p/go/issues/detail?id=8965
+// for a possible future alternative to this hack.
+// from https://github.com/juju/testing/blob/master/checkers/deepequal.go
+func interfaceOf(v reflect.Value) interface{} {
+	if !v.IsValid() {
+		return nil
+	}
+	return bypassCanInterface(v).Interface()
+}
+
+type flag uintptr
+
+var flagRO flag
+
+// constants copied from reflect/value.go
+const (
+	// The value of flagRO up to and including Go 1.3.
+	flagRO1p3 = 1 << 0
+
+	// The value of flagRO from Go 1.4.
+	flagRO1p4 = 1 << 5
+)
+
+var flagValOffset = func() uintptr {
+	field, ok := reflect.TypeOf(reflect.Value{}).FieldByName("flag")
+	if !ok {
+		panic("reflect.Value has no flag field")
+	}
+	return field.Offset
+}()
+
+func flagField(v *reflect.Value) *flag {
+	return (*flag)(unsafe.Pointer(uintptr(unsafe.Pointer(v)) + flagValOffset))
+}
+
+// bypassCanInterface returns a version of v that
+// bypasses the CanInterface check.
+func bypassCanInterface(v reflect.Value) reflect.Value {
+	if !v.IsValid() || v.CanInterface() {
+		return v
+	}
+	*flagField(&v) &^= flagRO
+	return v
+}
+
+// Sanity checks against future reflect package changes
+// to the type or semantics of the Value.flag field.
+func init() {
+	field, ok := reflect.TypeOf(reflect.Value{}).FieldByName("flag")
+	if !ok {
+		panic("reflect.Value has no flag field")
+	}
+	if field.Type.Kind() != reflect.TypeOf(flag(0)).Kind() {
+		panic("reflect.Value flag field has changed kind")
+	}
+	var t struct {
+		a int
+		A int
+	}
+	vA := reflect.ValueOf(t).FieldByName("A")
+	va := reflect.ValueOf(t).FieldByName("a")
+	flagA := *flagField(&vA)
+	flaga := *flagField(&va)
+
+	// Infer flagRO from the difference between the flags
+	// for the (otherwise identical) fields in t.
+	flagRO = flagA ^ flaga
+	if flagRO != flagRO1p3 && flagRO != flagRO1p4 {
+		panic("reflect.Value read-only flag has changed semantics")
+	}
 }

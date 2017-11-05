@@ -464,3 +464,32 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type TestInlineStruct struct {
+	tableName struct{} `json:"-"`
+
+	Field  string  `json:"field"`
+	Field2 *string `json:"field2"`
+}
+
+func TestMarshal_InlineStruct(t *testing.T) {
+	v := TestInlineStruct{
+		Field:  "World",
+		Field2: nil,
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"field":  "World",
+		"field2": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
