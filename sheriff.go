@@ -87,7 +87,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			val = val.Elem()
 		}
 
-		if val.CanInterface() {
+		if val.IsValid() && val.CanInterface() {
 			// we can skip the group checkif if the field is a composition field
 			isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 			if !isEmbeddedField {
