@@ -464,3 +464,37 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type TestInlineStruct struct {
+	// explicitely testing unexported fields
+	// go vet complains about it and that's ok to ignore.
+	tableName        struct{ Test string } `json:"-" is:"notexported"`
+	tableNameWithTag struct{ Test string } `json:"foo" is:"notexported"`
+
+	Field  string  `json:"field"`
+	Field2 *string `json:"field2"`
+}
+
+func TestMarshal_InlineStruct(t *testing.T) {
+	v := TestInlineStruct{
+		tableName:        struct{ Test string }{"test"},
+		tableNameWithTag: struct{ Test string }{"testWithTag"},
+		Field:            "World",
+		Field2:           nil,
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"field":  "World",
+		"field2": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
