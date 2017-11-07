@@ -79,6 +79,10 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		if jsonOpts.Contains("omitempty") && isEmptyValue(val) {
 			continue
 		}
+		// skip unexported fields
+		if !val.IsValid() || !val.CanInterface() {
+			continue
+		}
 
 		// if there is an anonymous field which is a struct
 		// we want the childs exposed at the toplevel to be
@@ -144,6 +148,10 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 //
 // There is support for types implementing the Marshaller interface, arbitrary structs, slices, maps and base types.
 func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
+	// return nil on nil pointer struct fields
+	if !v.IsValid() || !v.CanInterface() {
+		return nil, nil
+	}
 	val := v.Interface()
 
 	if marshaller, ok := val.(Marshaller); ok {
