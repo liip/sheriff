@@ -501,8 +501,8 @@ func TestMarshal_InlineStruct(t *testing.T) {
 }
 
 type TestInet struct {
-	IPv4 net.IP `json:"ipv6"`
-	IPv6 net.IP `json:"ipv4"`
+	IPv4 net.IP `json:"ipv4"`
+	IPv6 net.IP `json:"ipv6"`
 }
 
 func TestMarshal_Inet(t *testing.T) {
