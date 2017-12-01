@@ -2,6 +2,7 @@ package sheriff
 
 import (
 	"encoding/json"
+	"net"
 	"testing"
 	"time"
 
@@ -493,6 +494,33 @@ func TestMarshal_InlineStruct(t *testing.T) {
 	expected, err := json.Marshal(map[string]interface{}{
 		"field":  "World",
 		"field2": nil,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+type TestInet struct {
+	IPv4 net.IP `json:"ipv6"`
+	IPv6 net.IP `json:"ipv4"`
+}
+
+func TestMarshal_Inet(t *testing.T) {
+	v := TestInet{
+		IPv4: net.ParseIP("0.0.0.0").To4(),
+		IPv6: net.ParseIP("::1").To16(),
+	}
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"ipv4": net.ParseIP("0.0.0.0").To4(),
+		"ipv6": net.ParseIP("::1").To16(),
 	})
 	assert.NoError(t, err)
 
