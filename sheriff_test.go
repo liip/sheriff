@@ -508,7 +508,7 @@ type TestInet struct {
 func TestMarshal_Inet(t *testing.T) {
 	v := TestInet{
 		IPv4: net.ParseIP("0.0.0.0").To4(),
-		IPv6: net.ParseIP("::1").To16(),
+		IPv6: net.ParseIP("::").To16(),
 	}
 	o := &Options{}
 
@@ -520,7 +520,7 @@ func TestMarshal_Inet(t *testing.T) {
 
 	expected, err := json.Marshal(map[string]interface{}{
 		"ipv4": net.ParseIP("0.0.0.0").To4(),
-		"ipv6": net.ParseIP("::1").To16(),
+		"ipv6": net.ParseIP("::").To16(),
 	})
 	assert.NoError(t, err)
 
