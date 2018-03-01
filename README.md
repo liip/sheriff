@@ -208,3 +208,7 @@ Want to make sheriff faster? Please send us your pull request or open an issue d
 
 - This idea and code has been created partially during a [Liip](https://liip.ch) hackday.
 - Thanks to [@basgys](https://github.com/basgys) for reviews & improvements.
+
+## Related projects
+
+[mweibel/php-to-go](https://github.com/mweibel/php-to-go) is a code generator translating PHP models (using [JMS serializer](https://jmsyst.com/libs/serializer)) to Go structs with sheriff tags. The two projects were initially developed together and just recently php-to-go has been split out and published too. 
