@@ -22,7 +22,8 @@ type Options struct {
 	// will result in the field being marshalled.
 	// Specifying a since setting of "2" with the same API version specified,
 	// will not marshal the field.
-	ApiVersion *version.Version
+	ApiVersion  *version.Version
+	ShowDefault bool
 }
 
 // MarshalInvalidTypeError is an error returned to indicate the wrong type has been
@@ -99,7 +100,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 				groups := strings.Split(field.Tag.Get("groups"), ",")
 
 				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || len(groups) == 0 {
+				if !shouldShow || (len(groups) == 0 && !options.ShowDefault) {
 					continue
 				}
 			}
