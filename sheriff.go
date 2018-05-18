@@ -97,11 +97,17 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 		if !isEmbeddedField {
 			if checkGroups {
-				groups := strings.Split(field.Tag.Get("groups"), ",")
-
-				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || (len(groups) == 0 && !options.ShowDefault) {
-					continue
+				groupsTag := strings.TrimSpace(field.Tag.Get("groups"))
+				if len(groupsTag) == 0 {
+					if !options.ShowDefault {
+						continue
+					}
+				} else {
+					groups := strings.Split(groupsTag, ",")
+					shouldShow := listContains(groups, options.Groups)
+					if !shouldShow {
+						continue
+					}
 				}
 			}
 
