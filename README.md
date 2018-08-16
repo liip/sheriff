@@ -15,6 +15,8 @@ By invoking sheriff with specific options,
 those tags determine whether a field will be added to the output map or not. It
 can then be marshalled using "encoding/json".
 
+**NOTE**: Since this package uses the *context* package, it will only work on Go 1.7+
+
 ## Implemented tags
 
 ### Groups
