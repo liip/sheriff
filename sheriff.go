@@ -16,6 +16,9 @@ type Options struct {
 	// A field with multiple groups (comma-separated) will result in marshalling of that
 	// field if one of their groups is specified.
 	Groups []string
+	// GroupName determine the name of the groups tag.
+	// If not defined, "groups" will be used.
+	GroupName string
 	// ApiVersion sets the API version to use when marshalling.
 	// The tags `since` and `until` use the API version setting.
 	// Specifying the API version as "1.0.0" and having an until setting of "2"
@@ -52,6 +55,9 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 	t := v.Type()
 
 	checkGroups := len(options.Groups) > 0
+	if len(options.GroupName) == 0 {
+		options.GroupName = "groups"
+	}
 
 	if t.Kind() == reflect.Ptr {
 		// follow pointer
@@ -96,7 +102,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 		if !isEmbeddedField {
 			if checkGroups {
-				groups := strings.Split(field.Tag.Get("groups"), ",")
+				groups := strings.Split(field.Tag.Get(options.GroupName), ",")
 
 				shouldShow := listContains(groups, options.Groups)
 				if !shouldShow || len(groups) == 0 {

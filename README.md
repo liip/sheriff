@@ -31,7 +31,25 @@ type GroupsExample struct {
     SomethingElse string `json:"something_else" groups:"api,personal"`
 }
 ```
- 
+
+It's also possible to use a different tag instead of `groups`, by specifying it in the `GroupName` option.
+
+Example:
+
+```go
+type UserType struct {
+    Username string   `json:"username" type:"api"`
+}
+
+func MarshalUserTypes(version *version.Version, groups []string, users UserTypeList) ([]byte, error) {
+    o := &sheriff.Options{
+        Groups:     groups,
+        GroupName:  "type",
+    }
+    ...
+}
+```
+
 ### Since
 Since specifies the version since that field is available. It's inclusive and SemVer compatible using
 [github.com/hashicorp/go-version](https://github.com/hashicorp/go-version).
