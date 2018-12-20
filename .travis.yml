@@ -4,19 +4,25 @@ go:
   - "1.8"
   - "1.9"
   - "1.10"
+  - "1.11"
   - master
 
 before_install:
-  - go get -u golang.org/x/tools/cmd/goimports
   - go get github.com/mattn/goveralls
 
 script:
-  - FILES=`find . -iname '*.go' -type f -not -path "./vendor/*"`
-  # linting
-  - gofmt -d $FILES
-  - go tool vet $FILES || echo "\n\nunexported field test is failing? that's ok. More failing? not ok.\n\n"
-  - goimports -d $FILES
   # testing
   - go test -v -race -bench . -covermode=atomic -coverprofile=cover.out
   # coveralls.io
   - goveralls -coverprofile=cover.out -service=travis-ci
+
+jobs:
+  include:
+    - name: "Linting with Go 1.11"
+      script:
+        - go get -u golang.org/x/tools/cmd/goimports
+        - FILES=`find . -iname '*.go' -type f -not -path "./vendor/*"`
+        - gofmt -d $FILES
+        - go tool vet $FILES || echo "\n\nunexported field test is failing? that's ok. More failing? not ok.\n\n"
+        - goimports -d $FILES
+      go: "1.11"
