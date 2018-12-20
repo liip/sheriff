@@ -466,6 +466,50 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
+type InterfacableBeta struct {
+	Integer int    `json:"integer" groups:"safe"`
+	Secret  string `json:"secret"`
+}
+type InterfacableCharlie struct {
+	Integer int    `json:"integer" groups:"safe"`
+	Secret  string `json:"secret"`
+}
+type ArrayOfInterfacable []CanHazInterface
+type CanHazInterface interface {
+}
+type InterfacerAlpha struct {
+	Plaintext     string              `json:"plaintext" groups:"safe"`
+	Secret        string              `json:"secret"`
+	Nested        InterfacableBeta    `json:"nested" groups:"safe"`
+	Interfaceable ArrayOfInterfacable `json:"interfacable" groups:"safe"`
+}
+
+func TestMarshal_ArrayOfInterfacable(t *testing.T) {
+	a := InterfacerAlpha{"I am plaintext", "I am a secret", InterfacableBeta{100, "Still a secret"}, ArrayOfInterfacable{InterfacableBeta{200, "Still a secret good"}, InterfacableCharlie{300, "Still a secret exellect"}}}
+
+	o := &Options{
+		Groups: []string{"safe"},
+	}
+
+	actualMap, err := Marshal(o, a)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+	//{\"interfacable\":[{\"integer\":200},{\"integer\":300}],\"nested\":{\"integer\":100},\"plaintext\":\"I am plaintext\"}
+	expected, err := json.Marshal(map[string]interface{}{
+		"interfacable": []map[string]interface{}{
+			map[string]interface{}{"integer": 200},
+			map[string]interface{}{"integer": 300},
+		},
+		"nested":    map[string]interface{}{"integer": 100},
+		"plaintext": "I am plaintext",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
 type TestInlineStruct struct {
 	// explicitely testing unexported fields
 	// go vet complains about it and that's ok to ignore.
