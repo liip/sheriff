@@ -466,26 +466,36 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
-type InterfacableBeta struct {
+type InterfaceableBeta struct {
 	Integer int    `json:"integer" groups:"safe"`
 	Secret  string `json:"secret"`
 }
-type InterfacableCharlie struct {
+type InterfaceableCharlie struct {
 	Integer int    `json:"integer" groups:"safe"`
 	Secret  string `json:"secret"`
 }
-type ArrayOfInterfacable []CanHazInterface
+type ArrayOfInterfaceable []CanHazInterface
 type CanHazInterface interface {
 }
 type InterfacerAlpha struct {
-	Plaintext     string              `json:"plaintext" groups:"safe"`
-	Secret        string              `json:"secret"`
-	Nested        InterfacableBeta    `json:"nested" groups:"safe"`
-	Interfaceable ArrayOfInterfacable `json:"interfacable" groups:"safe"`
+	Plaintext     string               `json:"plaintext" groups:"safe"`
+	Secret        string               `json:"secret"`
+	Nested        InterfaceableBeta    `json:"nested" groups:"safe"`
+	Interfaceable ArrayOfInterfaceable `json:"interfaceable" groups:"safe"`
 }
 
-func TestMarshal_ArrayOfInterfacable(t *testing.T) {
-	a := InterfacerAlpha{"I am plaintext", "I am a secret", InterfacableBeta{100, "Still a secret"}, ArrayOfInterfacable{InterfacableBeta{200, "Still a secret good"}, InterfacableCharlie{300, "Still a secret exellect"}}}
+func TestMarshal_ArrayOfInterfaceable(t *testing.T) {
+	a := InterfacerAlpha{
+		"I am plaintext",
+		"I am a secret",
+		InterfaceableBeta{
+			100,
+			"Still a secret",
+		},
+		ArrayOfInterfaceable{
+			InterfaceableBeta{200, "Still a secret good"},
+			InterfaceableCharlie{300, "Still a secret exellect"},
+		}}
 
 	o := &Options{
 		Groups: []string{"safe"},
@@ -496,9 +506,9 @@ func TestMarshal_ArrayOfInterfacable(t *testing.T) {
 
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
-	//{\"interfacable\":[{\"integer\":200},{\"integer\":300}],\"nested\":{\"integer\":100},\"plaintext\":\"I am plaintext\"}
+
 	expected, err := json.Marshal(map[string]interface{}{
-		"interfacable": []map[string]interface{}{
+		"interfaceable": []map[string]interface{}{
 			map[string]interface{}{"integer": 200},
 			map[string]interface{}{"integer": 300},
 		},
