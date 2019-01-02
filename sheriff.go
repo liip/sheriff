@@ -180,7 +180,7 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		k = v.Kind()
 	}
 
-	if k == reflect.Struct {
+	if k == reflect.Interface || k == reflect.Struct {
 		return Marshal(options, val)
 	}
 	if k == reflect.Slice {
