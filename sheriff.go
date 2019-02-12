@@ -74,6 +74,11 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		jsonTag, jsonOpts := parseTag(field.Tag.Get("json"))
 
+		// If no json tag is provided, use the field Name
+		if jsonTag == "" {
+			jsonTag = field.Name
+		}
+
 		if jsonTag == "-" {
 			continue
 		}

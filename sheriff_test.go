@@ -350,6 +350,36 @@ func TestMarshal_Recursive(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
+type TestNoJSONTagModel struct {
+	SomeData    string `groups:"test"`
+	AnotherData string `groups:"test"`
+}
+
+func TestMarshal_NoJSONTAG(t *testing.T) {
+	testModel := &TestNoJSONTagModel{
+		SomeData:    "SomeData",
+		AnotherData: "AnotherData",
+	}
+
+	o := &Options{
+		Groups: []string{"test"},
+	}
+
+	actualMap, err := Marshal(o, testModel)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"SomeData":    "SomeData",
+		"AnotherData": "AnotherData",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
 type TimeHackTest struct {
 	ATime time.Time `json:"a_time" groups:"test"`
 }
