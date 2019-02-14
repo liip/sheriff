@@ -109,7 +109,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		// we can skip the group checkif if the field is a composition field
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 
-		if isEmbeddedField {
+		if isEmbeddedField && field.Type.Kind() == reflect.Struct {
 			tt := field.Type
 			parentGroups := strings.Split(field.Tag.Get("groups"), ",")
 			for i := 0; i < tt.NumField(); i++ {
