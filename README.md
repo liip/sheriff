@@ -33,7 +33,26 @@ type GroupsExample struct {
     SomethingElse string `json:"something_else" groups:"api,personal"`
 }
 ```
- 
+
+### Anonymous fields
+
+Tags added to a struct’s anonymous field propagates to the inner-fields if no other tags are specified.
+
+Example:
+
+```go
+type UserInfo struct {
+    UserPrivateInfo `groups:"private"`
+    UserPublicInfo  `groups:"public"`
+}
+type UserPrivateInfo struct {
+    Age string
+}
+type UserPublicInfo struct {
+    ID    string
+    Email string`
+}
+``` 
 ### Since
 Since specifies the version since that field is available. It's inclusive and SemVer compatible using
 [github.com/hashicorp/go-version](https://github.com/hashicorp/go-version).
