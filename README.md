@@ -50,7 +50,7 @@ type UserPrivateInfo struct {
 }
 type UserPublicInfo struct {
     ID    string
-    Email string`
+    Email string
 }
 ``` 
 ### Since
