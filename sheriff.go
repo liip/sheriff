@@ -23,6 +23,9 @@ type Options struct {
 	// Specifying a since setting of "2" with the same API version specified,
 	// will not marshal the field.
 	ApiVersion *version.Version
+	// IncludeNoGroup determines if fields, which don't have any group tag should
+	// be included or not. Default: false
+	IncludeNoGroup bool
 }
 
 // MarshalInvalidTypeError is an error returned to indicate the wrong type has been
@@ -101,9 +104,13 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 		if !isEmbeddedField {
 			if checkGroups {
-				groups := strings.Split(field.Tag.Get("groups"), ",")
+				_groups, ok := field.Tag.Lookup("groups")
+				groups := strings.Split(_groups, ",")
 
 				shouldShow := listContains(groups, options.Groups)
+				if (options.IncludeNoGroup == true && ok == false) {
+					shouldShow = true;
+				}
 				if !shouldShow || len(groups) == 0 {
 					continue
 				}
