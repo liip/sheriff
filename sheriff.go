@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/hashicorp/go-version"
 )
 
 // Options determine which struct fields are being added to the output map.
@@ -23,6 +23,9 @@ type Options struct {
 	// Specifying a since setting of "2" with the same API version specified,
 	// will not marshal the field.
 	ApiVersion *version.Version
+
+	// This is used internally so that we can propagate anonymous fields groups tag to all child field.
+	nestedGroupsMap map[string][]string
 }
 
 // MarshalInvalidTypeError is an error returned to indicate the wrong type has been
@@ -50,6 +53,12 @@ type Marshaller interface {
 func Marshal(options *Options, data interface{}) (interface{}, error) {
 	v := reflect.ValueOf(data)
 	t := v.Type()
+
+	// Initialise nestedGroupsMap,
+	// TODO: this may impact the performance, find a better place for this.
+	if options.nestedGroupsMap == nil {
+		options.nestedGroupsMap = make(map[string][]string)
+	}
 
 	checkGroups := len(options.Groups) > 0
 
@@ -99,10 +108,26 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		// we can skip the group checkif if the field is a composition field
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
+
+		if isEmbeddedField && field.Type.Kind() == reflect.Struct {
+			tt := field.Type
+			parentGroups := strings.Split(field.Tag.Get("groups"), ",")
+			for i := 0; i < tt.NumField(); i++ {
+				nestedField := tt.Field(i)
+				options.nestedGroupsMap[nestedField.Name] = parentGroups
+			}
+		}
+
 		if !isEmbeddedField {
 			if checkGroups {
-				groups := strings.Split(field.Tag.Get("groups"), ",")
+				var groups []string
+				if field.Tag.Get("groups") != "" {
+					groups = strings.Split(field.Tag.Get("groups"), ",")
+				}
 
+				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
+					groups = append(groups, options.nestedGroupsMap[field.Name]...)
+				}
 				shouldShow := listContains(groups, options.Groups)
 				if !shouldShow || len(groups) == 0 {
 					continue

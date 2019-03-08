@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-version"
+	version "github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -378,6 +378,45 @@ func TestMarshal_NoJSONTAG(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
+}
+
+type UserInfo struct {
+	UserPrivateInfo `groups:"private"`
+	UserPublicInfo  `groups:"public"`
+}
+type UserPrivateInfo struct {
+	Age string
+}
+type UserPublicInfo struct {
+	ID    string
+	Email string `groups:"private"`
+}
+
+func TestMarshal_ParentInherit(t *testing.T) {
+	publicInfo := UserPublicInfo{ID: "F94", Email: "hello@hello.com"}
+	privateInfo := UserPrivateInfo{Age: "20"}
+	testModel := UserInfo{
+		UserPrivateInfo: privateInfo,
+		UserPublicInfo:  publicInfo,
+	}
+
+	o := &Options{
+		Groups: []string{"public"},
+	}
+
+	actualMap, err := Marshal(o, testModel)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"ID": "F94",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+
 }
 
 type TimeHackTest struct {
