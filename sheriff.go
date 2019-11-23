@@ -128,8 +128,8 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
 					groups = append(groups, options.nestedGroupsMap[field.Name]...)
 				}
-				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || len(groups) == 0 {
+				shouldShow := len(groups) == 0 || listContains(groups, options.Groups)
+				if !shouldShow {
 					continue
 				}
 			}
