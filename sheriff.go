@@ -60,8 +60,6 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		options.nestedGroupsMap = make(map[string][]string)
 	}
 
-	checkGroups := len(options.Groups) > 0
-
 	if t.Kind() == reflect.Ptr {
 		// follow pointer
 		t = t.Elem()
@@ -119,19 +117,17 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		}
 
 		if !isEmbeddedField {
-			if checkGroups {
-				var groups []string
-				if field.Tag.Get("groups") != "" {
-					groups = strings.Split(field.Tag.Get("groups"), ",")
-				}
+			var groups []string
+			if field.Tag.Get("groups") != "" {
+				groups = strings.Split(field.Tag.Get("groups"), ",")
+			}
 
-				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
-					groups = append(groups, options.nestedGroupsMap[field.Name]...)
-				}
-				shouldShow := len(groups) == 0 || listContains(groups, options.Groups)
-				if !shouldShow {
-					continue
-				}
+			if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
+				groups = append(groups, options.nestedGroupsMap[field.Name]...)
+			}
+			shouldShow := len(groups) == 0 || listContains(groups, options.Groups)
+			if !shouldShow {
+				continue
 			}
 
 			if since := field.Tag.Get("since"); since != "" {

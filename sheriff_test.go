@@ -159,18 +159,8 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
-		"default_marshal":       "DefaultMarshal",
-		"only_group_test":       "OnlyGroupTest",
-		"only_group_test_other": "OnlyGroupTestOther",
-		"group_test_and_other":  "GroupTestAndOther",
-		"map_string_struct": map[string]map[string]bool{
-			"firstModel": {
-				"something":      true,
-				"something_else": true,
-			},
-		},
-		"omit_empty":            "OmitEmpty",
-		"omit_empty_group_test": "OmitEmptyGroupTest",
+		"default_marshal": "DefaultMarshal",
+		"omit_empty":      "OmitEmpty",
 	})
 	assert.NoError(t, err)
 
@@ -656,4 +646,32 @@ func TestMarshal_Inet(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
+}
+
+type TestArray struct {
+	Foo []int `json:"foo" groups:"summary"`
+	Bar int   `json:"bar"`
+}
+
+func TestArrayEmpty(t *testing.T) {
+	v := TestArray{
+		Foo: []int{3, 1, 4},
+		Bar: 0,
+	}
+
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"bar": 0,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+
 }
