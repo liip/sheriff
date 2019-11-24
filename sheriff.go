@@ -104,15 +104,18 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			val = val.Elem()
 		}
 
-		// we can skip the group checkif if the field is a composition field
+		// we can skip the group check if if the field is a composition field
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 
 		if isEmbeddedField && field.Type.Kind() == reflect.Struct {
 			tt := field.Type
-			parentGroups := strings.Split(field.Tag.Get("groups"), ",")
-			for i := 0; i < tt.NumField(); i++ {
-				nestedField := tt.Field(i)
-				options.nestedGroupsMap[nestedField.Name] = parentGroups
+			groups := field.Tag.Get("groups")
+			if groups != "" {
+				parentGroups := strings.Split(groups, ",")
+				for i := 0; i < tt.NumField(); i++ {
+					nestedField := tt.Field(i)
+					options.nestedGroupsMap[nestedField.Name] = parentGroups
+				}
 			}
 		}
 

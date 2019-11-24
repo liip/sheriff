@@ -675,3 +675,46 @@ func TestArrayEmpty(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 
 }
+
+type TopLevel struct {
+	NestedAnon
+	Named NestedNamed `json:"named"`
+}
+
+type NestedAnon struct {
+	Foo int `json:"foo"`
+	Bar int `json:"bar"`
+}
+
+type NestedNamed struct {
+	Name string `json:"name" groups:"verbose"`
+}
+
+func TestAnonymousWithNoGroups(t *testing.T) {
+	anon := NestedAnon{
+		Foo: 3,
+		Bar: 4,
+	}
+
+	named := NestedNamed{
+		Name: "KooKoo",
+	}
+	v := TopLevel{anon, named}
+
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo":   3,
+		"bar":   4,
+		"named": map[string]interface{}{},
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
