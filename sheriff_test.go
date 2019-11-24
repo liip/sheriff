@@ -52,7 +52,9 @@ func TestMarshal_GroupsValidGroup(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
+		"default_marshal":       "DefaultMarshal",
 		"only_group_test":       "OnlyGroupTest",
+		"omit_empty":            "OmitEmpty",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
 		"group_test_and_other":  "GroupTestAndOther",
 		"map_string_struct": map[string]map[string]bool{
@@ -90,8 +92,10 @@ func TestMarshal_GroupsValidGroupOmitEmpty(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
+		"default_marshal":      "DefaultMarshal",
 		"only_group_test":      "OnlyGroupTest",
 		"group_test_and_other": "GroupTestAndOther",
+		"omit_empty":           "OmitEmpty",
 		"map_string_struct": map[string]map[string]bool{
 			"firstModel": {
 				"something": true,
@@ -126,7 +130,9 @@ func TestMarshal_GroupsInvalidGroup(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]string{})
+	expected, err := json.Marshal(map[string]string{
+		"default_marshal": "DefaultMarshal",
+		"omit_empty":      "OmitEmpty"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -153,18 +159,8 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
-		"default_marshal":       "DefaultMarshal",
-		"only_group_test":       "OnlyGroupTest",
-		"only_group_test_other": "OnlyGroupTestOther",
-		"group_test_and_other":  "GroupTestAndOther",
-		"map_string_struct": map[string]map[string]bool{
-			"firstModel": {
-				"something":      true,
-				"something_else": true,
-			},
-		},
-		"omit_empty":            "OmitEmpty",
-		"omit_empty_group_test": "OmitEmptyGroupTest",
+		"default_marshal": "DefaultMarshal",
+		"omit_empty":      "OmitEmpty",
 	})
 	assert.NoError(t, err)
 
@@ -330,9 +326,11 @@ func TestMarshal_Recursive(t *testing.T) {
 		"some_data": "SomeData",
 		"groups_data": []map[string]interface{}{
 			{
+				"default_marshal":       "DefaultMarshal",
 				"only_group_test":       "OnlyGroupTest",
 				"omit_empty_group_test": "OmitEmptyGroupTest",
 				"group_test_and_other":  "GroupTestAndOther",
+				"omit_empty":            "OmitEmpty",
 				"map_string_struct": map[string]map[string]bool{
 					"firstModel": {
 						"something": true,
@@ -506,7 +504,7 @@ func TestMarshal_EmbeddedField(t *testing.T) {
 }
 
 type TestMarshal_EmbeddedEmpty struct {
-	Foo string
+	Foo string `groups:"nothing"`
 }
 
 type TestMarshal_EmbeddedParentEmpty struct {
@@ -537,18 +535,18 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 
 type InterfaceableBeta struct {
 	Integer int    `json:"integer" groups:"safe"`
-	Secret  string `json:"secret"`
+	Secret  string `json:"secret" groups:"unsafe"`
 }
 type InterfaceableCharlie struct {
 	Integer int    `json:"integer" groups:"safe"`
-	Secret  string `json:"secret"`
+	Secret  string `json:"secret" groups:"unsafe"`
 }
 type ArrayOfInterfaceable []CanHazInterface
 type CanHazInterface interface {
 }
 type InterfacerAlpha struct {
 	Plaintext     string               `json:"plaintext" groups:"safe"`
-	Secret        string               `json:"secret"`
+	Secret        string               `json:"secret" groups:"unsafe"`
 	Nested        InterfaceableBeta    `json:"nested" groups:"safe"`
 	Interfaceable ArrayOfInterfaceable `json:"interfaceable" groups:"safe"`
 }
@@ -563,7 +561,7 @@ func TestMarshal_ArrayOfInterfaceable(t *testing.T) {
 		},
 		ArrayOfInterfaceable{
 			InterfaceableBeta{200, "Still a secret good"},
-			InterfaceableCharlie{300, "Still a secret exellect"},
+			InterfaceableCharlie{300, "Still a secret excellent"},
 		}}
 
 	o := &Options{
@@ -644,6 +642,77 @@ func TestMarshal_Inet(t *testing.T) {
 	expected, err := json.Marshal(map[string]interface{}{
 		"ipv4": net.ParseIP("0.0.0.0").To4(),
 		"ipv6": net.ParseIP("::").To16(),
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+type TestArray struct {
+	Foo []int `json:"foo" groups:"summary"`
+	Bar int   `json:"bar"`
+}
+
+func TestArrayEmpty(t *testing.T) {
+	v := TestArray{
+		Foo: []int{3, 1, 4},
+		Bar: 0,
+	}
+
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"bar": 0,
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+
+}
+
+type TopLevel struct {
+	NestedAnon
+	Named NestedNamed `json:"named"`
+}
+
+type NestedAnon struct {
+	Foo int `json:"foo"`
+	Bar int `json:"bar"`
+}
+
+type NestedNamed struct {
+	Name string `json:"name" groups:"verbose"`
+}
+
+func TestAnonymousWithNoGroups(t *testing.T) {
+	anon := NestedAnon{
+		Foo: 3,
+		Bar: 4,
+	}
+
+	named := NestedNamed{
+		Name: "KooKoo",
+	}
+	v := TopLevel{anon, named}
+
+	o := &Options{}
+
+	actualMap, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"foo":   3,
+		"bar":   4,
+		"named": map[string]interface{}{},
 	})
 	assert.NoError(t, err)
 

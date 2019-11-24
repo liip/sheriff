@@ -60,8 +60,6 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		options.nestedGroupsMap = make(map[string][]string)
 	}
 
-	checkGroups := len(options.Groups) > 0
-
 	if t.Kind() == reflect.Ptr {
 		// follow pointer
 		t = t.Elem()
@@ -106,32 +104,33 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			val = val.Elem()
 		}
 
-		// we can skip the group checkif if the field is a composition field
+		// we can skip the group check if if the field is a composition field
 		isEmbeddedField := field.Anonymous && val.Kind() == reflect.Struct
 
 		if isEmbeddedField && field.Type.Kind() == reflect.Struct {
 			tt := field.Type
-			parentGroups := strings.Split(field.Tag.Get("groups"), ",")
-			for i := 0; i < tt.NumField(); i++ {
-				nestedField := tt.Field(i)
-				options.nestedGroupsMap[nestedField.Name] = parentGroups
+			groups := field.Tag.Get("groups")
+			if groups != "" {
+				parentGroups := strings.Split(groups, ",")
+				for i := 0; i < tt.NumField(); i++ {
+					nestedField := tt.Field(i)
+					options.nestedGroupsMap[nestedField.Name] = parentGroups
+				}
 			}
 		}
 
 		if !isEmbeddedField {
-			if checkGroups {
-				var groups []string
-				if field.Tag.Get("groups") != "" {
-					groups = strings.Split(field.Tag.Get("groups"), ",")
-				}
+			var groups []string
+			if field.Tag.Get("groups") != "" {
+				groups = strings.Split(field.Tag.Get("groups"), ",")
+			}
 
-				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
-					groups = append(groups, options.nestedGroupsMap[field.Name]...)
-				}
-				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || len(groups) == 0 {
-					continue
-				}
+			if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
+				groups = append(groups, options.nestedGroupsMap[field.Name]...)
+			}
+			shouldShow := len(groups) == 0 || listContains(groups, options.Groups)
+			if !shouldShow {
+				continue
 			}
 
 			if since := field.Tag.Get("since"); since != "" {
