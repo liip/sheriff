@@ -232,7 +232,7 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			dest[key.Interface().(string)] = d
+			dest[key.String()] = d
 		}
 		return dest, nil
 	}
