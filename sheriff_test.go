@@ -649,3 +649,17 @@ func TestMarshal_Inet(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+func TestMarshal_AliaString(t *testing.T) {
+	type ResourceName string
+	type ResourceList map[ResourceName]string
+	v := struct {
+		Resources ResourceList
+	}{
+		Resources: map[ResourceName]string{
+			"cpu": "100",
+		},
+	}
+	_, err := Marshal(&Options{}, &v)
+	assert.NoError(t, err)
+}
