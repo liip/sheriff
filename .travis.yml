@@ -1,10 +1,7 @@
 language: go
 go:
-  - "1.7"
-  - "1.8"
-  - "1.9"
-  - "1.10"
-  - "1.11"
+  - "1.13"
+  - "1.14"
   - master
 
 before_install:
@@ -18,11 +15,11 @@ script:
 
 jobs:
   include:
-    - name: "Linting with Go 1.11"
+    - name: "Linting with Go 1.14"
       script:
         - go get -u golang.org/x/tools/cmd/goimports
         - FILES=`find . -iname '*.go' -type f -not -path "./vendor/*"`
         - gofmt -d $FILES
         - go tool vet $FILES || echo "\n\nunexported field test is failing? that's ok. More failing? not ok.\n\n"
         - goimports -d $FILES
-      go: "1.11"
+      go: "1.14"
