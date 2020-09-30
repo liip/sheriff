@@ -52,6 +52,9 @@ type Marshaller interface {
 // In all other cases we can't derive the type in a meaningful way and is therefore an `interface{}`.
 func Marshal(options *Options, data interface{}) (interface{}, error) {
 	v := reflect.ValueOf(data)
+	if !v.IsValid() {
+		return data, nil
+	}
 	t := v.Type()
 
 	// Initialise nestedGroupsMap,

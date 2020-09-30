@@ -663,3 +663,15 @@ func TestMarshal_AliaString(t *testing.T) {
 	_, err := Marshal(&Options{}, &v)
 	assert.NoError(t, err)
 }
+
+type EmptyInterfaceStruct struct {
+	Data interface{} `json:"data"`
+}
+
+func TestMarshal_EmptyInterface(t *testing.T) {
+	v := EmptyInterfaceStruct{}
+	o := &Options{}
+
+	_, err := Marshal(o, v)
+	assert.NoError(t, err)
+}
