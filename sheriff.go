@@ -23,6 +23,10 @@ type Options struct {
 	// Specifying a since setting of "2" with the same API version specified,
 	// will not marshal the field.
 	ApiVersion *version.Version
+	// IncludeEmptyTag determines whether a field without the
+	// `groups` tag should be marshalled ot not.
+	// This option is false by default.
+	IncludeEmptyTag bool
 
 	// This is used internally so that we can propagate anonymous fields groups tag to all child field.
 	nestedGroupsMap map[string][]string
@@ -131,8 +135,8 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
 					groups = append(groups, options.nestedGroupsMap[field.Name]...)
 				}
-				shouldShow := listContains(groups, options.Groups)
-				if !shouldShow || len(groups) == 0 {
+				shouldShow := listContains(groups, options.Groups) || (len(groups) == 0 && options.IncludeEmptyTag)
+				if !shouldShow || (len(groups) == 0 && !options.IncludeEmptyTag) {
 					continue
 				}
 			}
