@@ -26,6 +26,7 @@ type TestGroupsModel struct {
 	OmitEmptyGroupTest        string            `json:"omit_empty_group_test,omitempty" groups:"test"`
 	SliceString               []string          `json:"slice_string,omitempty" groups:"test"`
 	MapStringStruct           map[string]AModel `json:"map_string_struct,omitempty" groups:"test,test-other"`
+	IncludeEmptyTag           string            `json:"include_empty_tag"`
 }
 
 func TestMarshal_GroupsValidGroup(t *testing.T) {
@@ -141,6 +142,7 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		GroupTestAndOther:  "GroupTestAndOther",
 		OmitEmpty:          "OmitEmpty",
 		OmitEmptyGroupTest: "OmitEmptyGroupTest",
+		IncludeEmptyTag:    "IncludeEmptyTag",
 		MapStringStruct:    map[string]AModel{"firstModel": {true, true}},
 	}
 
@@ -165,6 +167,42 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 		},
 		"omit_empty":            "OmitEmpty",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
+		"include_empty_tag":     "IncludeEmptyTag",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
+func TestMarshal_GroupsValidGroupIncludeEmptyTag(t *testing.T) {
+	testModel := &TestGroupsModel{
+		DefaultMarshal:     "DefaultMarshal",
+		OnlyGroupTest:      "OnlyGroupTest",
+		GroupTestAndOther:  "GroupTestAndOther",
+		OmitEmpty:          "OmitEmpty",
+		OmitEmptyGroupTest: "",
+		SliceString:        []string{"test", "bla"},
+		IncludeEmptyTag:    "IncludeEmptyTag",
+	}
+
+	o := &Options{
+		IncludeEmptyTag: true,
+		Groups:          []string{"test"},
+	}
+
+	actualMap, err := Marshal(o, testModel)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(map[string]interface{}{
+		"default_marshal":      "DefaultMarshal",
+		"only_group_test":      "OnlyGroupTest",
+		"group_test_and_other": "GroupTestAndOther",
+		"omit_empty":           "OmitEmpty",
+		"slice_string":         []string{"test", "bla"},
+		"include_empty_tag":    "IncludeEmptyTag",
 	})
 	assert.NoError(t, err)
 
