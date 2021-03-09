@@ -135,8 +135,21 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 				if len(groups) == 0 && options.nestedGroupsMap[field.Name] != nil {
 					groups = append(groups, options.nestedGroupsMap[field.Name]...)
 				}
+
+				// Marshall the field if
+				// - it has at least one of the requested groups
+				//     or
+				// - it has no group and 'IncludeEmptyTag' is set to true
 				shouldShow := listContains(groups, options.Groups) || (len(groups) == 0 && options.IncludeEmptyTag)
-				if !shouldShow || (len(groups) == 0 && !options.IncludeEmptyTag) {
+
+				// Prevent marshalling of the field if
+				// - it should not be shown (above)
+				//     or
+				// - it has no groups and 'IncludeEmptyTag' is set to false
+				shouldHide := !shouldShow || (len(groups) == 0 && !options.IncludeEmptyTag)
+
+				if shouldHide {
+					// skip this field
 					continue
 				}
 			}

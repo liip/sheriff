@@ -174,7 +174,7 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
-func TestMarshal_GroupsNoGroupsIncludeEmptyTag(t *testing.T) {
+func TestMarshal_GroupsValidGroupIncludeEmptyTag(t *testing.T) {
 	testModel := &TestGroupsModel{
 		DefaultMarshal:     "DefaultMarshal",
 		OnlyGroupTest:      "OnlyGroupTest",
