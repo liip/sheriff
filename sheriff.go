@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
 )
 
 // Options determine which struct fields are being added to the output map.
@@ -216,6 +216,13 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		return val, nil
 	}
 	k := v.Kind()
+
+	switch k {
+	case reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		if v.IsNil() {
+			return val, nil
+		}
+	}
 
 	if k == reflect.Ptr {
 		v = v.Elem()

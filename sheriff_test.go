@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -712,4 +712,24 @@ func TestMarshal_EmptyInterface(t *testing.T) {
 
 	_, err := Marshal(o, v)
 	assert.NoError(t, err)
+}
+
+func TestMarshal_BooleanPtrMap(t *testing.T) {
+	tru := true
+
+	toMarshal := map[string]*bool{
+		"example": &tru,
+		"another": nil,
+	}
+
+	marshalMap, err := Marshal(&Options{}, toMarshal)
+	assert.NoError(t, err)
+
+	marshal, err := json.Marshal(marshalMap)
+	assert.NoError(t, err)
+
+	expect, err := json.Marshal(toMarshal)
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(marshal), string(expect))
 }
