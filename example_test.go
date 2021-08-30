@@ -53,6 +53,9 @@ func Example() {
 		log.Panic(err)
 	}
 	v2, err := version.NewVersion("2.0.0")
+	if err != nil {
+		log.Panic(err)
+	}
 
 	output, err := MarshalUsers(v1, []string{"api"}, users)
 	if err != nil {
