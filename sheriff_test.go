@@ -628,10 +628,10 @@ func TestMarshal_ArrayOfInterfaceable(t *testing.T) {
 }
 
 type TestInlineStruct struct {
-	// explicitely testing unexported fields
-	// go vet complains about it and that's ok to ignore.
-	tableName        struct{ Test string } `json:"-" is:"notexported"`
-	tableNameWithTag struct{ Test string } `json:"foo" is:"notexported"`
+	// explicitly testing unexported fields
+	// golangci-lint complains about it and that's ok to ignore.
+	tableName        struct{ Test string } `json:"-"`  //nolint
+	tableNameWithTag struct{ Test string } `json:"foo"`  //nolint
 
 	Field  string  `json:"field"`
 	Field2 *string `json:"field2"`
