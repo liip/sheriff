@@ -218,7 +218,7 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 	k := v.Kind()
 
 	switch k {
-	case reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+	case reflect.Interface, reflect.Map, reflect.Ptr:
 		if v.IsNil() {
 			return val, nil
 		}

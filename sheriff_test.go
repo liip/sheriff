@@ -630,8 +630,8 @@ func TestMarshal_ArrayOfInterfaceable(t *testing.T) {
 type TestInlineStruct struct {
 	// explicitly testing unexported fields
 	// golangci-lint complains about it and that's ok to ignore.
-	tableName        struct{ Test string } `json:"-"`  //nolint
-	tableNameWithTag struct{ Test string } `json:"foo"`  //nolint
+	tableName        struct{ Test string } `json:"-"`   //nolint
+	tableNameWithTag struct{ Test string } `json:"foo"` //nolint
 
 	Field  string  `json:"field"`
 	Field2 *string `json:"field2"`
@@ -732,4 +732,18 @@ func TestMarshal_BooleanPtrMap(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(marshal), string(expect))
+}
+
+func TestMarshal_NilSlice(t *testing.T) {
+	var stringSlice []string // nil slice
+
+	marshalSlice, err := Marshal(&Options{}, stringSlice)
+	assert.NoError(t, err)
+
+	jsonResult, err := json.Marshal(marshalSlice)
+	assert.NoError(t, err)
+
+	expect := "[]"
+
+	assert.Equal(t, expect, string(jsonResult))
 }
