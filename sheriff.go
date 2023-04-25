@@ -248,7 +248,7 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 	if k == reflect.Map {
 		mapKeys := v.MapKeys()
 		if len(mapKeys) == 0 {
-			return nil, nil
+			return val, nil
 		}
 		if mapKeys[0].Kind() != reflect.String {
 			return nil, MarshalInvalidTypeError{t: mapKeys[0].Kind(), data: val}
