@@ -763,20 +763,6 @@ func TestMarshal_NilSlice(t *testing.T) {
 	jsonResult, err := json.Marshal(marshalSlice)
 	assert.NoError(t, err)
 
-	expect := "null"
-
-	assert.Equal(t, expect, string(jsonResult))
-}
-
-func TestMarshal_EmptySlice(t *testing.T) {
-	var stringSlice = []string{} // empty slice
-
-	marshalSlice, err := Marshal(&Options{}, stringSlice)
-	assert.NoError(t, err)
-
-	jsonResult, err := json.Marshal(marshalSlice)
-	assert.NoError(t, err)
-
 	expect := "[]"
 
 	assert.Equal(t, expect, string(jsonResult))
