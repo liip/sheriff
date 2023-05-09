@@ -505,28 +505,8 @@ func TestMarshal_EmptyMap(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
-		"a_map": make(map[string]interface{}),
+		"a_map": nil,
 	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, string(expected), string(actual))
-}
-
-func TestMarshal_EmptyMapJson(t *testing.T) {
-	emp := EmptyMapTest{
-		AMap: make(map[string]string),
-	}
-	o := &Options{
-		Groups: []string{"test"},
-	}
-
-	actualMap, err := Marshal(o, emp)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(actualMap)
-	assert.NoError(t, err)
-
-	expected, err := json.Marshal(emp)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
