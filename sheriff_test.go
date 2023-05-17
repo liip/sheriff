@@ -532,6 +532,48 @@ func TestMarshal_EmptyMapJson(t *testing.T) {
 	assert.Equal(t, string(expected), string(actual))
 }
 
+type PointerTest struct {
+	BoolPointer          *bool    `json:"boolPointer" groups:"test"`
+	BoolPointerNil       *bool    `json:"boolPointerNil" groups:"test"`
+	BoolPointerNilOmit   *bool    `json:"boolPointerNilOmit,omitempty" groups:"test"`
+	FloatPointer         *float64 `json:"floatPointer" groups:"test"`
+	FloatPointerNil      *float64 `json:"floatPointerNil" groups:"test"`
+	FloatPointerNilOmit  *float64 `json:"floatPointerNilOmit" groups:"test"`
+	IntPointer           *int     `json:"intPointer" groups:"test"`
+	IntPointerNil        *int     `json:"intPointerNil" groups:"test"`
+	IntPointerNilOmit    *int     `json:"intPointerNilOmit" groups:"test"`
+	StringPointer        *string  `json:"stringPointer" groups:"test"`
+	StringPointerNil     *string  `json:"stringPointerNil" groups:"test"`
+	StringPointerNilOmit *string  `json:"stringPointerNilOmit" groups:"test"`
+}
+
+func TestMarshal_Pointer(t *testing.T) {
+	boolValue := true
+	intValue := -20000
+	stringValue := "12%&/()§?-loaMEN"
+	floatValue := 0.0
+	emp := PointerTest{
+		BoolPointer:   &boolValue,
+		IntPointer:    &intValue,
+		StringPointer: &stringValue,
+		FloatPointer:  &floatValue,
+	}
+	o := &Options{
+		Groups: []string{"test"},
+	}
+
+	actualMap, err := Marshal(o, emp)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(emp)
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+}
+
 type TestMarshal_Embedded struct {
 	Foo string `json:"foo" groups:"test"`
 }
