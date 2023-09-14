@@ -56,7 +56,7 @@ type Marshaller interface {
 // In all other cases we can't derive the type in a meaningful way and is therefore an `interface{}`.
 func Marshal(options *Options, data interface{}) (interface{}, error) {
 	v := reflect.ValueOf(data)
-	if !v.IsValid() {
+	if !v.IsValid() || v.Kind() == reflect.Ptr && v.IsNil() {
 		return data, nil
 	}
 	t := v.Type()

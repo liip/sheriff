@@ -747,3 +747,10 @@ func TestMarshal_NilSlice(t *testing.T) {
 
 	assert.Equal(t, expect, string(jsonResult))
 }
+
+func TestMarshal_NilPointer(t *testing.T) {
+	var a *AModel
+	v, err := Marshal(&Options{}, a)
+	assert.Nil(t, v)
+	assert.NoError(t, err)
+}
