@@ -106,6 +106,18 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 			continue
 		}
 
+		quoted := false
+		if jsonOpts.Contains("string") {
+			switch val.Kind() {
+			case reflect.Bool,
+				reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+				reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+				reflect.Float32, reflect.Float64,
+				reflect.String:
+				quoted = true
+			}
+		}
+
 		// if there is an anonymous field which is a struct
 		// we want the childs exposed at the toplevel to be
 		// consistent with the embedded json marshaller
@@ -178,6 +190,9 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		v, err := marshalValue(options, val)
 		if err != nil {
 			return nil, err
+		}
+		if quoted {
+			v = fmt.Sprintf("%v", v)
 		}
 
 		// when a composition field we want to bring the child

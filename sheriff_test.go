@@ -754,3 +754,26 @@ func TestMarshal_NilPointer(t *testing.T) {
 	assert.Nil(t, v)
 	assert.NoError(t, err)
 }
+
+func TestMarshal_User(t *testing.T) {
+	type JsonStringTag struct {
+		Test  int64   `json:"test,string"`
+		TestB bool    `json:"testb,string"`
+		TestF float64 `json:"testf,string"`
+		TestS string  `json:"tests,string"`
+	}
+	j := JsonStringTag{
+		Test:  12,
+		TestB: true,
+		TestF: 12.0,
+		TestS: "test",
+	}
+
+	v, err := Marshal(&Options{}, j)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]interface{}{"test": "12", "testb": "true", "testf": "12", "tests": "test"}, v)
+
+	d, err := json.Marshal(j)
+	assert.NoError(t, err)
+	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"\"test\""}`, string(d))
+}
