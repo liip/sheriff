@@ -1,4 +1,4 @@
-module github.com/liip/sheriff/v1
+module github.com/liip/sheriff/v2
 
 go 1.20
 

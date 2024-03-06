@@ -2,7 +2,7 @@
 [![GoDoc](https://godoc.org/github.com/liip/sheriff?status.svg)](https://godoc.org/github.com/liip/sheriff) [![Build Status](https://travis-ci.org/liip/sheriff.svg?branch=master)](https://travis-ci.org/liip/sheriff) [![Coverage Status](https://coveralls.io/repos/github/liip/sheriff/badge.svg?branch=master)](https://coveralls.io/github/liip/sheriff?branch=master)
 
 ```
-go get github.com/liip/sheriff/v1
+go get github.com/liip/sheriff/v2
 ```
 
 Package sheriff marshals structs conditionally based on tags on the fields. 
@@ -92,7 +92,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/go-version"
-	"github.com/liip/sheriff/v1"
+	"github.com/liip/sheriff/v2"
 )
 
 type User struct {
