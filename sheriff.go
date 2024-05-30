@@ -10,6 +10,15 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+// A KVStore is a simple key-value store.
+// The default implementation uses a map[string]interface{}.
+// This is fast, however will lead to inconsistent ordering of the keys in the generated JSON.
+// A custom implementation can be used to maintain the order of the keys.
+type KVStore interface {
+	Set(k string, v interface{})
+	Each(f func(k string, v interface{}))
+}
+
 // A FieldFilter is a function that decides whether a field should be marshalled or not.
 // If it returns true, the field will be marshalled, otherwise it will be skipped.
 type FieldFilter func(field reflect.StructField) (bool, error)
@@ -37,6 +46,12 @@ type Options struct {
 	// `groups` tag should be marshalled ot not.
 	// This option is false by default.
 	IncludeEmptyTag bool
+
+	// The KVStoreFactory is a function that returns a new KVStore.
+	// The default implementation uses a map[string]interface{}, which is fast but does not maintain the order of the
+	// keys.
+	// A custom implementation can be used to maintain the order of the keys, i.e. using github.com/wk8/go-ordered-map
+	KVStoreFactory func() KVStore
 
 	// This is used internally so that we can propagate anonymous fields groups tag to all child field.
 	nestedGroupsMap map[string][]string
@@ -81,6 +96,12 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		options.FieldFilter = createDefaultFieldFilter(options)
 	}
 
+	if options.KVStoreFactory == nil {
+		options.KVStoreFactory = func() KVStore {
+			return kvStore{}
+		}
+	}
+
 	if t.Kind() == reflect.Ptr {
 		// follow pointer
 		t = t.Elem()
@@ -94,7 +115,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		return marshalValue(options, v)
 	}
 
-	dest := make(map[string]interface{})
+	dest := options.KVStoreFactory()
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -172,13 +193,13 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		// when a composition field we want to bring the child
 		// nodes to the top
-		nestedVal, ok := v.(map[string]interface{})
+		nestedVal, ok := v.(KVStore)
 		if isEmbeddedField && ok {
-			for key, value := range nestedVal {
-				dest[key] = value
-			}
+			nestedVal.Each(func(k string, v interface{}) {
+				dest.Set(k, v)
+			})
 		} else {
-			dest[jsonTag] = v
+			dest.Set(jsonTag, v)
 		}
 	}
 
@@ -303,13 +324,14 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		if mapKeys[0].Kind() != reflect.String {
 			return nil, MarshalInvalidTypeError{t: mapKeys[0].Kind(), data: val}
 		}
-		dest := make(map[string]interface{})
+
+		dest := options.KVStoreFactory()
 		for _, key := range mapKeys {
 			d, err := marshalValue(options, v.MapIndex(key))
 			if err != nil {
 				return nil, err
 			}
-			dest[key.String()] = d
+			dest.Set(key.String(), d)
 		}
 		return dest, nil
 	}

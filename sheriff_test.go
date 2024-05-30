@@ -846,13 +846,12 @@ func TestMarshal_User(t *testing.T) {
 		TestS: "test",
 	}
 
-	v, err := Marshal(&Options{}, j)
+	m, err := Marshal(&Options{}, j)
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"test": "12", "testb": "true", "testf": "12", "tests": "test"}, v)
 
-	d, err := json.Marshal(j)
+	d, err := json.Marshal(m)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"\"test\""}`, string(d))
+	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"test"}`, string(d))
 }
 
 func TestMarshal_CustomFieldFilter(t *testing.T) {
@@ -873,6 +872,7 @@ func TestMarshal_CustomFieldFilter(t *testing.T) {
 	m, err := Marshal(o, v)
 	assert.NoError(t, err)
 
-	// ensure the "secret" value is not present in the marshalled map
-	assert.Equal(t, map[string]interface{}{"test": "teststring"}, m)
+	d, err := json.Marshal(m)
+	assert.NoError(t, err)
+	assert.Equal(t, `{"test":"teststring"}`, string(d))
 }

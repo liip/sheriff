@@ -217,6 +217,48 @@ func main() {
 // ]
 ```
 
+## Output ordering
+
+Sheriff converts the input struct into a basic structure using `map[string]interface{}`. This means that the generated 
+JSON will not have the same ordering as the input struct. If you need to have a specific ordering then a custom 
+implementation of the `KVStoreFactory` can be passed as an option.
+```go
+package main
+
+import (
+	"github.com/liip/sheriff/v2"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
+)
+
+type OrderedMap struct {
+	*orderedmap.OrderedMap[string, interface{}]
+}
+
+func NewOrderedMap() *OrderedMap {
+	return &OrderedMap{orderedmap.New[string, interface{}]()}
+}
+
+func (om *OrderedMap) Set(k string, v interface{}) {
+	om.OrderedMap.Set(k, v)
+}
+
+func (om *OrderedMap) Each(f func(k string, v interface{})) {
+	for pair := om.Newest(); pair != nil; pair = pair.Prev() {
+		f(pair.Key, pair.Value)
+	}
+}
+
+func main() {
+	opt := &sheriff.Options{
+		KVStoreFactory: func() sheriff.KVStore {
+			return NewOrderedMap()
+		},
+	}
+
+	// ...
+}
+```
+
 ## Benchmarks
 
 There's a simple benchmark in `bench_test.go` which compares running sheriff -> JSON versus just marshalling into JSON 
