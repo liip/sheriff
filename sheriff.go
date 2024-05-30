@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"gitlab.com/c0b/go-ordered-json"
 )
 
 // Options determine which struct fields are being added to the output map.
@@ -82,7 +83,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		return marshalValue(options, v)
 	}
 
-	dest := make(map[string]interface{})
+	dest := ordered.NewOrderedMap()
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -197,13 +198,18 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 
 		// when a composition field we want to bring the child
 		// nodes to the top
-		nestedVal, ok := v.(map[string]interface{})
+		nestedVal, ok := v.(*ordered.OrderedMap)
 		if isEmbeddedField && ok {
-			for key, value := range nestedVal {
-				dest[key] = value
+			iter := nestedVal.EntriesIter()
+			for {
+				pair, ok := iter()
+				if !ok {
+					break
+				}
+				dest.Set(pair.Key, pair.Value)
 			}
 		} else {
-			dest[jsonTag] = v
+			dest.Set(jsonTag, v)
 		}
 	}
 
@@ -268,13 +274,13 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 		if mapKeys[0].Kind() != reflect.String {
 			return nil, MarshalInvalidTypeError{t: mapKeys[0].Kind(), data: val}
 		}
-		dest := make(map[string]interface{})
+		dest := ordered.NewOrderedMap()
 		for _, key := range mapKeys {
 			d, err := marshalValue(options, v.MapIndex(key))
 			if err != nil {
 				return nil, err
 			}
-			dest[key.String()] = d
+			dest.Set(key.String(), d)
 		}
 		return dest, nil
 	}

@@ -82,52 +82,52 @@ func Example() {
 	// Version 1 output:
 	// [
 	//   {
-	//     "name": "Alice",
-	//     "username": "alice"
+	//     "username": "alice",
+	//     "name": "Alice"
 	//   },
 	//   {
-	//     "name": "Bob",
-	//     "username": "bob"
+	//     "username": "bob",
+	//     "name": "Bob"
 	//   }
 	// ]
 	//
 	// Version 2 output:
 	// [
 	//   {
+	//     "username": "alice",
 	//     "name": "Alice",
 	//     "roles": [
 	//       "user",
 	//       "admin"
-	//     ],
-	//     "username": "alice"
+	//     ]
 	//   },
 	//   {
+	//     "username": "bob",
 	//     "name": "Bob",
 	//     "roles": [
 	//       "user"
-	//     ],
-	//     "username": "bob"
+	//     ]
 	//   }
 	// ]
 	//
 	// Version 2 output with personal group too:
 	// [
 	//   {
+	//     "username": "alice",
 	//     "email": "alice@example.org",
 	//     "name": "Alice",
 	//     "roles": [
 	//       "user",
 	//       "admin"
-	//     ],
-	//     "username": "alice"
+	//     ]
 	//   },
 	//   {
+	//     "username": "bob",
 	//     "email": "bob@example.org",
 	//     "name": "Bob",
 	//     "roles": [
 	//       "user"
-	//     ],
-	//     "username": "bob"
+	//     ]
 	//   }
 	// ]
 }

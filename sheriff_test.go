@@ -2,6 +2,7 @@ package sheriff
 
 import (
 	"encoding/json"
+	"gitlab.com/c0b/go-ordered-json"
 	"net"
 	"testing"
 	"time"
@@ -52,17 +53,21 @@ func TestMarshal_GroupsValidGroup(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"only_group_test":       "OnlyGroupTest",
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"only_group_test": "OnlyGroupTest",
+		"group_test_and_other": "GroupTestAndOther",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
-		"group_test_and_other":  "GroupTestAndOther",
-		"map_string_struct": map[string]map[string]bool{
+		"slice_string": ["test", "bla"],
+		"map_string_struct": {
 			"firstModel": {
-				"something": true,
-			},
-		},
-		"slice_string": []string{"test", "bla"},
-	})
+				"something": true
+			}
+		}
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -90,16 +95,20 @@ func TestMarshal_GroupsValidGroupOmitEmpty(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"only_group_test":      "OnlyGroupTest",
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"only_group_test": "OnlyGroupTest",
 		"group_test_and_other": "GroupTestAndOther",
-		"map_string_struct": map[string]map[string]bool{
+		"slice_string": ["test", "bla"],
+		"map_string_struct": {
 			"firstModel": {
-				"something": true,
-			},
-		},
-		"slice_string": []string{"test", "bla"},
-	})
+				"something": true
+			}
+		}
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -154,21 +163,25 @@ func TestMarshal_GroupsNoGroups(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"default_marshal":       "DefaultMarshal",
-		"only_group_test":       "OnlyGroupTest",
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"default_marshal": "DefaultMarshal",
+		"only_group_test": "OnlyGroupTest",
 		"only_group_test_other": "OnlyGroupTestOther",
-		"group_test_and_other":  "GroupTestAndOther",
-		"map_string_struct": map[string]map[string]bool{
-			"firstModel": {
-				"something":      true,
-				"something_else": true,
-			},
-		},
-		"omit_empty":            "OmitEmpty",
+		"group_test_and_other": "GroupTestAndOther",
+		"omit_empty": "OmitEmpty",
 		"omit_empty_group_test": "OmitEmptyGroupTest",
-		"include_empty_tag":     "IncludeEmptyTag",
-	})
+		"map_string_struct": {
+			"firstModel": {
+				"something": true,
+				"something_else": true
+			}
+		},
+		"include_empty_tag": "IncludeEmptyTag"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -196,14 +209,21 @@ func TestMarshal_GroupsValidGroupIncludeEmptyTag(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"default_marshal":      "DefaultMarshal",
-		"only_group_test":      "OnlyGroupTest",
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"default_marshal": "DefaultMarshal",
+		"only_group_test": "OnlyGroupTest",
 		"group_test_and_other": "GroupTestAndOther",
-		"omit_empty":           "OmitEmpty",
-		"slice_string":         []string{"test", "bla"},
-		"include_empty_tag":    "IncludeEmptyTag",
-	})
+		"omit_empty": "OmitEmpty",
+		"slice_string": [
+			"test",
+			"bla"
+		],
+		"include_empty_tag": "IncludeEmptyTag"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -241,11 +261,15 @@ func TestMarshal_Versions(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]string{
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"default_marshal": "DefaultMarshal",
 		"until_20":        "Until20",
-		"until_21":        "Until21",
-	})
+		"until_21":        "Until21"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -264,12 +288,16 @@ func TestMarshal_Versions(t *testing.T) {
 	actual, err = json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err = json.Marshal(map[string]string{
+	m = ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"default_marshal": "DefaultMarshal",
-		"until_20":        "Until20",
-		"until_21":        "Until21",
-		"since_20":        "Since20",
-	})
+		"until_20": "Until20",
+		"until_21": "Until21",
+		"since_20": "Since20"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err = json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -288,12 +316,16 @@ func TestMarshal_Versions(t *testing.T) {
 	actual, err = json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err = json.Marshal(map[string]string{
+	m = ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"default_marshal": "DefaultMarshal",
-		"until_21":        "Until21",
-		"since_20":        "Since20",
-		"since_21":        "Since21",
-	})
+		"until_21": "Until21",
+		"since_20": "Since20",
+		"since_21": "Since21"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err = json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -312,11 +344,15 @@ func TestMarshal_Versions(t *testing.T) {
 	actual, err = json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err = json.Marshal(map[string]string{
+	m = ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"default_marshal": "DefaultMarshal",
-		"since_20":        "Since20",
-		"since_21":        "Since21",
-	})
+		"since_20": "Since20",
+		"since_21": "Since21"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err = json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -364,25 +400,32 @@ func TestMarshal_Recursive(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"some_data": "SomeData",
-		"groups_data": []map[string]interface{}{
+		"groups_data": [
 			{
-				"only_group_test":       "OnlyGroupTest",
+				"only_group_test": "OnlyGroupTest",
+				"group_test_and_other": "GroupTestAndOther",
 				"omit_empty_group_test": "OmitEmptyGroupTest",
-				"group_test_and_other":  "GroupTestAndOther",
-				"map_string_struct": map[string]map[string]bool{
+				"slice_string": [
+					"test",
+					"bla"
+				],
+				"map_string_struct": {
 					"firstModel": {
-						"something": true,
-					},
-				},
-				"slice_string": []string{"test", "bla"},
-			},
-		},
-		"is_marshaller": map[string]interface{}{
-			"should_marshal": "test",
-		},
-	})
+						"something": true
+					}
+				}
+			}
+		],
+		"is_marshaller": {
+			"should_marshal": "test"
+		}
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -409,10 +452,14 @@ func TestMarshal_NoJSONTAG(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"SomeData":    "SomeData",
-		"AnotherData": "AnotherData",
-	})
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"SomeData": "SomeData",
+		"AnotherData": "AnotherData"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -448,9 +495,13 @@ func TestMarshal_ParentInherit(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"ID": "F94",
-	})
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
+		"ID": "F94"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -596,10 +647,14 @@ func TestMarshal_EmbeddedField(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"bar": "World",
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"foo": "Hello",
-	})
+		"bar": "World"
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -676,14 +731,18 @@ func TestMarshal_ArrayOfInterfaceable(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"interfaceable": []map[string]interface{}{
-			map[string]interface{}{"integer": 200},
-			map[string]interface{}{"integer": 300},
-		},
-		"nested":    map[string]interface{}{"integer": 100},
+	m := ordered.NewOrderedMap()
+	err = m.UnmarshalJSON([]byte(`{
 		"plaintext": "I am plaintext",
-	})
+		"nested": { "integer": 100 },
+		"interfaceable": [
+			{ "integer": 200 },
+			{ "integer": 300 }
+		]
+	}`))
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(m)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(expected), string(actual))
@@ -847,9 +906,8 @@ func TestMarshal_User(t *testing.T) {
 
 	v, err := Marshal(&Options{}, j)
 	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"test": "12", "testb": "true", "testf": "12", "tests": "test"}, v)
 
-	d, err := json.Marshal(j)
+	d, err := json.Marshal(v)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"\"test\""}`, string(d))
+	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"test"}`, string(d))
 }
