@@ -3,6 +3,7 @@ package sheriff
 import (
 	"encoding/json"
 	"net"
+	"reflect"
 	"testing"
 	"time"
 
@@ -852,4 +853,26 @@ func TestMarshal_User(t *testing.T) {
 	d, err := json.Marshal(j)
 	assert.NoError(t, err)
 	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"\"test\""}`, string(d))
+}
+
+func TestMarshal_CustomDecider(t *testing.T) {
+	type testStruct struct {
+		TestValue   string `json:"test"`
+		SecretValue string `json:"secret" hidden:"true"`
+	}
+	v := testStruct{
+		TestValue:   "teststring",
+		SecretValue: "asecretvalue",
+	}
+
+	o := &Options{
+		Decider: func(field reflect.StructField) (bool, error) {
+			return field.Tag.Get("hidden") == "", nil
+		},
+	}
+	m, err := Marshal(o, v)
+	assert.NoError(t, err)
+
+	// ensure the "secret" value is not present in the marshalled map
+	assert.Equal(t, map[string]interface{}{"test": "teststring"}, m)
 }
