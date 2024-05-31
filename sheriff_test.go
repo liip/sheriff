@@ -855,7 +855,7 @@ func TestMarshal_User(t *testing.T) {
 	assert.Equal(t, `{"test":"12","testb":"true","testf":"12","tests":"\"test\""}`, string(d))
 }
 
-func TestMarshal_CustomDecider(t *testing.T) {
+func TestMarshal_CustomFieldFilter(t *testing.T) {
 	type testStruct struct {
 		TestValue   string `json:"test"`
 		SecretValue string `json:"secret" hidden:"true"`
@@ -866,7 +866,7 @@ func TestMarshal_CustomDecider(t *testing.T) {
 	}
 
 	o := &Options{
-		Decider: func(field reflect.StructField) (bool, error) {
+		FieldFilter: func(field reflect.StructField) (bool, error) {
 			return field.Tag.Get("hidden") == "", nil
 		},
 	}

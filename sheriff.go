@@ -10,17 +10,17 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-// A Decider is a function that decides whether a field should be marshalled or not.
+// A FieldFilter is a function that decides whether a field should be marshalled or not.
 // If it returns true, the field will be marshalled, otherwise it will be skipped.
-type Decider func(field reflect.StructField) (bool, error)
+type FieldFilter func(field reflect.StructField) (bool, error)
 
 // Options determine which struct fields are being added to the output map.
 type Options struct {
-	// The Decider makes the decision whether a field should be marshalled or not.
+	// The FieldFilter makes the decision whether a field should be marshalled or not.
 	// It receives the reflect.StructField of the field and should return true if the field should be included.
-	// If this is not set then the default Decider will be used, which uses the Groups and ApiVersion fields.
+	// If this is not set then the default FieldFilter will be used, which uses the Groups and ApiVersion fields.
 	// Setting this value will result in the other options being ignored.
-	Decider Decider
+	FieldFilter FieldFilter
 
 	// Groups determine which fields are getting marshalled based on the groups tag.
 	// A field with multiple groups (comma-separated) will result in marshalling of that
@@ -77,8 +77,8 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		options.nestedGroupsMap = make(map[string][]string)
 	}
 
-	if options.Decider == nil {
-		options.Decider = createDefaultDecider(options)
+	if options.FieldFilter == nil {
+		options.FieldFilter = createDefaultFieldFilter(options)
 	}
 
 	if t.Kind() == reflect.Ptr {
@@ -150,7 +150,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		}
 
 		if !isEmbeddedField {
-			include, err := options.Decider(field)
+			include, err := options.FieldFilter(field)
 			if err != nil {
 				return nil, err
 			}
@@ -185,9 +185,9 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 	return dest, nil
 }
 
-// createDefaultDecider creates a default Decider function which uses the options.Groups and options.ApiVersion fields
-// in order to determine whether a field should be marshalled or not.
-func createDefaultDecider(options *Options) Decider {
+// createDefaultFieldFilter creates a default FieldFilter function which uses the options.Groups and options.ApiVersion
+// fields in order to determine whether a field should be marshalled or not.
+func createDefaultFieldFilter(options *Options) FieldFilter {
 	checkGroups := len(options.Groups) > 0
 
 	return func(field reflect.StructField) (bool, error) {
