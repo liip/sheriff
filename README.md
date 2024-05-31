@@ -222,6 +222,11 @@ func main() {
 Sheriff converts the input struct into a basic structure using `map[string]interface{}`. This means that the generated 
 JSON will not have the same ordering as the input struct. If you need to have a specific ordering then a custom 
 implementation of the `KVStoreFactory` can be passed as an option.
+
+Providing a custom KV Store is likely to have a negative impact on performance, as such it should be used only when 
+necessary.
+
+For example:
 ```go
 package main
 
