@@ -852,7 +852,7 @@ func TestMarshal_BooleanPtrMap(t *testing.T) {
 	expect, err := json.Marshal(toMarshal)
 	assert.NoError(t, err)
 
-	assert.Equal(t, string(marshal), string(expect))
+	assert.JSONEq(t, string(marshal), string(expect))
 }
 
 func TestMarshal_NilSlice(t *testing.T) {
