@@ -84,6 +84,12 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		// we want the childs exposed at the toplevel to be
 		// consistent with the embedded json marshaller
 		if val.Kind() == reflect.Ptr {
+			if val.IsNil() { // For pointer fields with nil value, and omitempty not set, we set to nil (null) in JSON
+				if !jsonOpts.Contains("omitempty") {
+					dest[jsonTag] = nil
+				}
+				continue
+			}
 			val = val.Elem()
 		}
 

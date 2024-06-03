@@ -464,3 +464,42 @@ func TestMarshal_EmbeddedFieldEmpty(t *testing.T) {
 
 	assert.Equal(t, string(expected), string(actual))
 }
+
+type PointerFieldModel struct {
+	OptionalField *string `json:"optional_field,omitempty"`
+	RequiredField *string `json:"required_field"`
+	OtherField    *string `json:"other_field"`
+}
+
+func TestMarshal_PointerFields(t *testing.T) {
+	// Create a test model instance with nil pointer fields
+	otherFieldValue := "SomeValue"
+	testModel := &PointerFieldModel{
+		OptionalField: nil,
+		RequiredField: nil,
+		OtherField:    &otherFieldValue,
+	}
+
+	o := &Options{
+		Groups:     []string{},
+		ApiVersion: nil,
+	}
+
+	// Marshal the test model
+	actualMap, err := Marshal(o, testModel)
+	assert.NoError(t, err)
+
+	// Convert the result to JSON
+	actual, err := json.Marshal(actualMap)
+	assert.NoError(t, err)
+
+	// Define the expected JSON result
+	expected, err := json.Marshal(map[string]interface{}{
+		"required_field": nil,
+		"other_field":    "SomeValue",
+	})
+	assert.NoError(t, err)
+
+	// Compare the actual and expected JSON results
+	assert.Equal(t, string(expected), string(actual))
+}
