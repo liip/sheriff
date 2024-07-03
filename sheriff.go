@@ -286,6 +286,16 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 	case json.Marshaler, encoding.TextMarshaler, fmt.Stringer:
 		return val, nil
 	}
+
+	if v.CanAddr() {
+		addrVal := v.Addr().Interface()
+
+		switch addrVal.(type) {
+		case json.Marshaler, encoding.TextMarshaler, fmt.Stringer:
+			return addrVal, nil
+		}
+	}
+
 	k := v.Kind()
 
 	switch k {
@@ -358,3 +368,4 @@ func listContains(a []string, b []string) bool {
 	}
 	return false
 }
+
