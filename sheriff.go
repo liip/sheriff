@@ -122,10 +122,12 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		val := v.Field(i)
 
 		jsonTag, jsonOpts := parseTag(field.Tag.Get("json"))
+		foundJSONTag := true
 
 		// If no json tag is provided, use the field Name
 		if jsonTag == "" {
-			jsonTag = field.Name
+			foundJSONTag = false
+  			jsonTag = field.Name
 		}
 
 		if jsonTag == "-" {
@@ -194,7 +196,7 @@ func Marshal(options *Options, data interface{}) (interface{}, error) {
 		// when a composition field we want to bring the child
 		// nodes to the top
 		nestedVal, ok := v.(KVStore)
-		if isEmbeddedField && ok {
+		if !foundJSONTag && isEmbeddedField && ok {
 			nestedVal.Each(func(k string, v interface{}) {
 				dest.Set(k, v)
 			})
