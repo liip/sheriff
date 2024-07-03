@@ -579,14 +579,20 @@ type TestMarshal_Embedded struct {
 	Foo string `json:"foo" groups:"test"`
 }
 
+type TestMarshal_NamedEmbedded struct {
+	Qux string `json:"qux" groups:"test"`
+}
+
 type TestMarshal_EmbeddedParent struct {
 	*TestMarshal_Embedded
-	Bar string `json:"bar" groups:"test"`
+	*TestMarshal_NamedEmbedded `json:"embedded"`
+	Bar                        string `json:"bar" groups:"test"`
 }
 
 func TestMarshal_EmbeddedField(t *testing.T) {
 	v := TestMarshal_EmbeddedParent{
 		&TestMarshal_Embedded{"Hello"},
+		&TestMarshal_NamedEmbedded{"Big"},
 		"World",
 	}
 	o := &Options{Groups: []string{"test"}}
@@ -597,13 +603,24 @@ func TestMarshal_EmbeddedField(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"bar": "World",
-		"foo": "Hello",
-	})
-	assert.NoError(t, err)
+	t.Run("should match the original json marshal", func(t *testing.T) {
+		expected, err := json.Marshal(v)
+		assert.NoError(t, err)
 
-	assert.Equal(t, string(expected), string(actual))
+		assert.JSONEq(t, string(expected), string(actual))
+	})
+
+	t.Run("should match the expected map", func(t *testing.T) {
+		expectedMap, err := json.Marshal(map[string]interface{}{
+			"bar": "World",
+			"foo": "Hello",
+			"embedded": map[string]interface{}{
+				"qux": "Big",
+			},
+		})
+		assert.NoError(t, err)
+		assert.JSONEq(t, string(expectedMap), string(actual))
+	})
 }
 
 type TestMarshal_EmbeddedEmpty struct {
