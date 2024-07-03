@@ -282,10 +282,21 @@ func marshalValue(options *Options, v reflect.Value) (interface{}, error) {
 	// types which are e.g. structs, slices or maps and implement one of the following interfaces should not be
 	// marshalled by sheriff because they'll be correctly marshalled by json.Marshal instead.
 	// Otherwise (e.g. net.IP) a byte slice may be output as a list of uints instead of as an IP string.
+	// This needs to be checked for both value and pointer types.
 	switch val.(type) {
 	case json.Marshaler, encoding.TextMarshaler, fmt.Stringer:
 		return val, nil
 	}
+
+	if v.CanAddr() {
+		addrVal := v.Addr().Interface()
+
+		switch addrVal.(type) {
+		case json.Marshaler, encoding.TextMarshaler, fmt.Stringer:
+			return addrVal, nil
+		}
+	}
+
 	k := v.Kind()
 
 	switch k {

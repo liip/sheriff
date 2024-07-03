@@ -2,6 +2,7 @@ package sheriff
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
@@ -579,14 +580,46 @@ type TestMarshal_Embedded struct {
 	Foo string `json:"foo" groups:"test"`
 }
 
+// TestMarshal_EmbeddedCustom is used to test an embedded struct with a custom marshaler that is not a pointer.
+type TestMarshal_EmbeddedCustom struct {
+	Val int
+	Set bool
+}
+
+func (t TestMarshal_EmbeddedCustom) MarshalJSON() ([]byte, error) {
+	if t.Set {
+		return []byte(fmt.Sprintf("%d", t.Val)), nil
+	}
+
+	return nil, nil
+}
+
+// TestMarshal_EmbeddedCustomPtr is used to test an embedded struct with a custom marshaler that is a pointer.
+type TestMarshal_EmbeddedCustomPtr struct {
+	Val int
+	Set bool
+}
+
+func (t *TestMarshal_EmbeddedCustomPtr) MarshalJSON() ([]byte, error) {
+	if t.Set {
+		return []byte(fmt.Sprintf("%d", t.Val)), nil
+	}
+
+	return nil, nil
+}
+
 type TestMarshal_EmbeddedParent struct {
 	*TestMarshal_Embedded
-	Bar string `json:"bar" groups:"test"`
+	*TestMarshal_EmbeddedCustom    `json:"value"`
+	*TestMarshal_EmbeddedCustomPtr `json:"value_ptr"`
+	Bar                            string `json:"bar" groups:"test"`
 }
 
 func TestMarshal_EmbeddedField(t *testing.T) {
 	v := TestMarshal_EmbeddedParent{
 		&TestMarshal_Embedded{"Hello"},
+		&TestMarshal_EmbeddedCustom{10, true},
+		&TestMarshal_EmbeddedCustomPtr{20, true},
 		"World",
 	}
 	o := &Options{Groups: []string{"test"}}
@@ -598,8 +631,10 @@ func TestMarshal_EmbeddedField(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected, err := json.Marshal(map[string]interface{}{
-		"bar": "World",
-		"foo": "Hello",
+		"bar":       "World",
+		"foo":       "Hello",
+		"value":     10,
+		"value_ptr": 20,
 	})
 	assert.NoError(t, err)
 
