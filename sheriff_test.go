@@ -580,6 +580,10 @@ type TestMarshal_Embedded struct {
 	Foo string `json:"foo" groups:"test"`
 }
 
+type TestMarshal_NamedEmbedded struct {
+	Qux string `json:"qux" groups:"test"`
+}
+
 // TestMarshal_EmbeddedCustom is used to test an embedded struct with a custom marshaler that is not a pointer.
 type TestMarshal_EmbeddedCustom struct {
 	Val int
@@ -610,14 +614,16 @@ func (t *TestMarshal_EmbeddedCustomPtr) MarshalJSON() ([]byte, error) {
 
 type TestMarshal_EmbeddedParent struct {
 	*TestMarshal_Embedded
+	*TestMarshal_NamedEmbedded `json:"embedded"`
 	*TestMarshal_EmbeddedCustom    `json:"value"`
 	*TestMarshal_EmbeddedCustomPtr `json:"value_ptr"`
-	Bar                            string `json:"bar" groups:"test"`
+	Bar                        string `json:"bar" groups:"test"`
 }
 
 func TestMarshal_EmbeddedField(t *testing.T) {
 	v := TestMarshal_EmbeddedParent{
 		&TestMarshal_Embedded{"Hello"},
+		&TestMarshal_NamedEmbedded{"Big"},
 		&TestMarshal_EmbeddedCustom{10, true},
 		&TestMarshal_EmbeddedCustomPtr{20, true},
 		"World",
@@ -630,15 +636,26 @@ func TestMarshal_EmbeddedField(t *testing.T) {
 	actual, err := json.Marshal(actualMap)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(map[string]interface{}{
-		"bar":       "World",
-		"foo":       "Hello",
-		"value":     10,
-		"value_ptr": 20,
-	})
-	assert.NoError(t, err)
+	t.Run("should match the original json marshal", func(t *testing.T) {
+		expected, err := json.Marshal(v)
+		assert.NoError(t, err)
 
-	assert.Equal(t, string(expected), string(actual))
+		assert.JSONEq(t, string(expected), string(actual))
+	})
+
+	t.Run("should match the expected map", func(t *testing.T) {
+		expectedMap, err := json.Marshal(map[string]interface{}{
+			"bar": "World",
+			"foo": "Hello",
+			"value":     10,
+			"value_ptr": 20,
+			"embedded": map[string]interface{}{
+				"qux": "Big",
+			},
+		})
+		assert.NoError(t, err)
+		assert.JSONEq(t, string(expectedMap), string(actual))
+	})
 }
 
 type TestMarshal_EmbeddedEmpty struct {
